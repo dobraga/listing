@@ -13,7 +13,7 @@ import (
 )
 
 func FetchListings(DB *gorm.DB, location Location) (string, []error) {
-	var page_listings Property
+	var pageListings Property
 
 	errs := location.FinalValidation()
 	if errs != nil {
@@ -23,7 +23,7 @@ func FetchListings(DB *gorm.DB, location Location) (string, []error) {
 	size := 24
 	origin := location.Origin
 
-	max_page := viper.GetInt64("max_page")
+	maxPage := viper.GetInt64("max_page")
 
 	query := createQuery(location, size)
 
@@ -32,18 +32,18 @@ func FetchListings(DB *gorm.DB, location Location) (string, []error) {
 		return "", []error{err}
 	}
 	total_pages := int64(qtdListings / size)
-	if max_page <= 0 {
-		max_page = total_pages
+	if maxPage <= 0 {
+		maxPage = total_pages
 	} else {
-		max_page = Min(max_page, total_pages)
+		maxPage = Min(maxPage, total_pages)
 	}
 
-	log.Infof("Getting %d/%d pages with %d listings from '%s'", max_page, total_pages, qtdListings, origin)
+	log.Infof("Getting %d/%d pages with %d listings from '%s'", maxPage, total_pages, qtdListings, origin)
 
 	wg := new(sync.WaitGroup)
 	channelErr := make(chan error)
 
-	for page := 1; page <= int(max_page); page++ {
+	for page := 1; page <= int(maxPage); page++ {
 		wg.Add(1)
 		log.Debugf("Getting page %d from '%s'", page, origin)
 		query["from"] = page * query["size"].(int)
@@ -53,7 +53,7 @@ func FetchListings(DB *gorm.DB, location Location) (string, []error) {
 		go func(p int, o, bt string, b []byte, d *gorm.DB, w *sync.WaitGroup, c chan error) {
 			defer w.Done()
 
-			l, err := page_listings.Unmarshal(b, o, bt)
+			l, err := pageListings.Unmarshal(b, o, bt)
 			if err != nil {
 				log.Errorf("Parsed error page %d from '%s': %v", p, o, err)
 				c <- err
@@ -70,7 +70,7 @@ func FetchListings(DB *gorm.DB, location Location) (string, []error) {
 
 		}(page, origin, location.BusinessType, bytesData, DB, wg, channelErr)
 
-		if page < int(max_page) {
+		if page < int(maxPage) {
 			time.Sleep(300 * time.Millisecond)
 		}
 	}
@@ -83,9 +83,9 @@ func FetchListings(DB *gorm.DB, location Location) (string, []error) {
 		errs = append(errs, err)
 	}
 
-	log.Infof("Saved %d pages from '%s'", max_page, origin)
+	log.Infof("Saved %d pages from '%s'", maxPage, origin)
 
-	return fmt.Sprintf("Saved %d pages from '%s'", max_page, origin), errs
+	return fmt.Sprintf("Saved %d pages from '%s'", maxPage, origin), errs
 }
 
 func qtdListings(origin string, query map[string]interface{}) (int, error) {
