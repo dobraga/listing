@@ -13,8 +13,6 @@ var DB *gorm.DB
 func main() {
 	LoadSettings()
 	DB = Connect()
-	DB.AutoMigrate(&Station{})
-	DB.AutoMigrate(&Property{})
 
 	SaveStations(DB)
 
