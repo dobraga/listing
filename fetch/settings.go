@@ -32,7 +32,7 @@ func LoadSettings() {
 	}
 
 	// Non nullable configs
-	for _, variable := range []string{"POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_DB", "POSTGRES_PORT"} {
+	for _, variable := range []string{"POSTGRES_HOST", "POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_DB", "POSTGRES_PORT"} {
 		value := viper.Get(variable)
 		if value == nil {
 			panic(fmt.Sprintf("Need '%s' variable in .env file", variable))
@@ -40,7 +40,7 @@ func LoadSettings() {
 	}
 
 	// env configs
-	for _, variable := range []string{"POSTGRES_HOST", "DEBUG", "max_page", "force_update"} {
+	for _, variable := range []string{"DEBUG", "max_page", "force_update"} {
 		envVariable := fmt.Sprintf("%s_%s", env, variable)
 		value := viper.Get(envVariable)
 		viper.Set(variable, value)
