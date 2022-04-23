@@ -16,7 +16,7 @@ func Connect() *gorm.DB {
 	var err error
 
 	if viper.GetString("ENV") == "DEVELOPMENT" {
-		db, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+		db, err = gorm.Open(sqlite.Open("../test.db"), &gorm.Config{})
 	} else {
 		dsn := fmt.Sprintf(
 			"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=America/Sao_Paulo",
