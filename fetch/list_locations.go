@@ -9,8 +9,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-func ListLocations(local string, origin string) ([]Location, error) {
-	var finalLocations []Location
+func ListLocations(local string, origin string) ([]Local, error) {
+	mapLocations := map[string]Local{}
+	finalLocations := []Local{}
 
 	sites := viper.Get("sites")
 	if sites == nil {
@@ -39,16 +40,21 @@ func ListLocations(local string, origin string) ([]Location, error) {
 
 	for _, location := range locations {
 		address := location.(map[string]interface{})["address"].(map[string]interface{})
+		locationId := address["locationId"].(string)
 
-		sLocation := Location{
+		sLocation := Local{
 			City:         address["city"].(string),
 			Zone:         address["zone"].(string),
 			State:        address["state"].(string),
-			LocationId:   address["locationId"].(string),
+			LocationId:   locationId,
 			Neighborhood: address["neighborhood"].(string),
 			StateAcronym: address["stateAcronym"].(string),
 		}
 
+		mapLocations[locationId] = sLocation
+	}
+
+	for _, sLocation := range mapLocations {
 		finalLocations = append(finalLocations, sLocation)
 	}
 

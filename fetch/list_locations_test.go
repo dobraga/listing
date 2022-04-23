@@ -12,8 +12,7 @@ func TestListLocations(t *testing.T) {
 		t.Error(err)
 	}
 
-	if len(locations) != 6 {
-		t.Errorf("Expected 6 elements and find %d: %v", len(locations), locations)
+	if len(locations) != 4 {
+		t.Errorf("Expected 4 elements and find %d: %v", len(locations), locations)
 	}
-
 }

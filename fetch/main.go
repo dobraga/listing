@@ -37,12 +37,14 @@ func main() {
 
 	r.GET("listings/:business_type/:listing_type/:city/:locationId/:neighborhood/:state/:stateAcronym/:zone", func(c *gin.Context) {
 		location := Location{
-			City:         c.Param("city"),
-			Zone:         c.Param("zone"),
-			State:        c.Param("state"),
-			LocationId:   c.Param("locationId"),
-			Neighborhood: c.Param("neighborhood"),
-			StateAcronym: c.Param("stateAcronym"),
+			Local: Local{
+				City:         c.Param("city"),
+				Zone:         c.Param("zone"),
+				State:        c.Param("state"),
+				LocationId:   c.Param("locationId"),
+				Neighborhood: c.Param("neighborhood"),
+				StateAcronym: c.Param("stateAcronym"),
+			},
 			BusinessType: c.Param("business_type"),
 			ListingType:  c.Param("listing_type"),
 		}
