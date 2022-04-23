@@ -41,11 +41,11 @@ func LoadSettings() {
 
 	// env configs
 	for _, variable := range []string{"POSTGRES_HOST", "DEBUG", "max_page", "force_update"} {
-		env_variable := fmt.Sprintf("%s_%s", env, variable)
-		value := viper.Get(env_variable)
+		envVariable := fmt.Sprintf("%s_%s", env, variable)
+		value := viper.Get(envVariable)
 		viper.Set(variable, value)
 		if value == nil {
-			panic(fmt.Sprintf("Need '%s' variable in .env file", env_variable))
+			panic(fmt.Sprintf("Need '%s' variable in .env file", envVariable))
 		}
 	}
 

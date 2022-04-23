@@ -18,7 +18,7 @@ type Station struct {
 	Lat      float64
 	Lon      float64
 	Url      string
-	UrlLinha string
+	URLLinha string
 }
 
 type Property struct {
@@ -43,32 +43,32 @@ type Property struct {
 	Lon           float64
 	Price         float64
 	CondoFee      float64
-	Created_date  time.Time
-	Updated_date  time.Time
+	CreatedDate   time.Time
+	UpdatedDate   time.Time
 	Images        string
 }
 
-func (p *Property) Unmarshal(bytes_data []byte, url, BusinessType string) ([]Property, error) {
+func (p *Property) Unmarshal(bytesData []byte, url, BusinessType string) ([]Property, error) {
 	var listNestedProperty []NestedProperty
 	var listProperty []Property
 	medias := []string{}
 
 	// Bytes to map of interfaces
 	data := map[string]interface{}{}
-	err := json.Unmarshal(bytes_data, &data)
+	err := json.Unmarshal(bytesData, &data)
 	if err != nil {
-		log.Error(fmt.Sprintf("Erro no parse dos dados '%v': %v", bytes_data, err))
+		log.Error(fmt.Sprintf("Erro no parse dos dados '%v': %v", bytesData, err))
 	}
 
 	// Interface to map and get listings
 	data = data["search"].(map[string]interface{})
 	data = data["result"].(map[string]interface{})
-	listings_page := data["listings"].([]interface{})
+	listingsPage := data["listings"].([]interface{})
 
 	// Slice of listings to Struct
-	jsonBytes, err := json.Marshal(listings_page)
+	jsonBytes, err := json.Marshal(listingsPage)
 	if err != nil {
-		log.Error(fmt.Sprintf("Erro na transformação para binário '%v': %v", listings_page, err))
+		log.Error(fmt.Sprintf("Erro na transformação para binário '%v': %v", listingsPage, err))
 		// os.WriteFile("test.json", jsonBytes, 0666)
 	}
 
@@ -121,8 +121,8 @@ func (p *Property) Unmarshal(bytes_data []byte, url, BusinessType string) ([]Pro
 				property.Lon = float64(nestedProperty.Listing.Address.Point.Lon)
 				property.Price = price
 				property.CondoFee = monthlyCondoFee
-				property.Created_date = nestedProperty.Listing.CreatedAt
-				property.Updated_date = nestedProperty.Listing.UpdatedAt
+				property.CreatedDate = nestedProperty.Listing.CreatedAt
+				property.UpdatedDate = nestedProperty.Listing.UpdatedAt
 				property.Images = media
 
 				listProperty = append(listProperty, property)

@@ -20,7 +20,7 @@ type PageStation struct {
 	Title    string
 	Linha    string
 	Url      string
-	UrlLinha string
+	URLLinha string
 }
 
 func SaveStations(db *gorm.DB) {
@@ -32,18 +32,18 @@ func SaveStations(db *gorm.DB) {
 }
 
 func readUrlsSettings() [][2]string {
-	url_metro_trem := viper.GetStringMap("metro_trem")
-	all_urls := [][2]string{}
+	urlMetroTrem := viper.GetStringMap("metro_trem")
+	allUrls := [][2]string{}
 
-	for uf, urls := range url_metro_trem {
-		map_url := urls.(map[string]interface{})
+	for uf, urls := range urlMetroTrem {
+		mapUrls := urls.(map[string]interface{})
 
-		for _, url := range map_url["urls"].([]interface{}) {
-			all_urls = append(all_urls, [2]string{uf, url.(string)})
+		for _, url := range mapUrls["urls"].([]interface{}) {
+			allUrls = append(allUrls, [2]string{uf, url.(string)})
 		}
 	}
 
-	return all_urls
+	return allUrls
 }
 
 func savePageStations(db *gorm.DB, pages []PageStation) {
@@ -72,9 +72,9 @@ func listStations() []PageStation {
 
 	log.Debugf("Fetching: %v", urls)
 
-	for _, uf_url := range urls {
-		uf := uf_url[0]
-		url := uf_url[1]
+	for _, ufUrls := range urls {
+		uf := ufUrls[0]
+		url := ufUrls[1]
 		log.Infof("Getting %s '%s'", uf, url)
 		linhas := map[string]string{}
 		urls := []string{}
@@ -95,9 +95,9 @@ func listStations() []PageStation {
 			linhas[name] = linha
 		}
 
-		for linha, url_linha := range linhas {
+		for linha, URLLinha := range linhas {
 			log.Debugf("Getting %s '%s' '%s'", uf, linha, url)
-			doc, err := htmlquery.LoadURL(url_linha)
+			doc, err := htmlquery.LoadURL(URLLinha)
 			if err != nil {
 				log.Error(err)
 			}
@@ -113,7 +113,7 @@ func listStations() []PageStation {
 
 			for _, l := range list {
 				url := fmt.Sprintf("https://pt.wikipedia.org%s", htmlquery.SelectAttr(l, "href"))
-				output = append(output, PageStation{uf, title, linha, url, url_linha})
+				output = append(output, PageStation{uf, title, linha, url, URLLinha})
 			}
 		}
 	}
@@ -132,10 +132,10 @@ func fetchStation(page PageStation) Station {
 
 	name := htmlquery.InnerText(htmlquery.FindOne(doc, "//*[@id='firstHeading']/text()"))
 
-	url_latlng := htmlquery.SelectAttr(htmlquery.FindOne(doc, "//a[contains(@href, 'tools.wmflabs.org')]"), "href")
+	urlLatlng := htmlquery.SelectAttr(htmlquery.FindOne(doc, "//a[contains(@href, 'tools.wmflabs.org')]"), "href")
 
-	if len(url_latlng) > 0 {
-		doc, err = htmlquery.LoadURL(url_latlng)
+	if len(urlLatlng) > 0 {
+		doc, err = htmlquery.LoadURL(urlLatlng)
 		if err != nil {
 			log.Error(err)
 		}
@@ -160,7 +160,7 @@ func fetchStation(page PageStation) Station {
 		Lat:      lat,
 		Lon:      lon,
 		Url:      page.Url,
-		UrlLinha: page.UrlLinha,
+		URLLinha: page.URLLinha,
 	}
 
 	return station

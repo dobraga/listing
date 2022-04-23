@@ -7,8 +7,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-var business_type_values = map[string]bool{"RENTAL": true, "SALE": true}
-var listing_type_values = map[string]bool{"DEVELOPMENT": true, "USED": true}
+var businessTypeValues = map[string]bool{"RENTAL": true, "SALE": true}
+var listingTypeValues = map[string]bool{"DEVELOPMENT": true, "USED": true}
 
 type Location struct {
 	City         string
@@ -23,11 +23,11 @@ type Location struct {
 }
 
 func (l *Location) Validation() error {
-	if _, ok := business_type_values[l.BusinessType]; !ok {
+	if _, ok := businessTypeValues[l.BusinessType]; !ok {
 		return errors.New("business types allowed ['RENTAL', 'SALE']")
 	}
 
-	if _, ok := listing_type_values[l.ListingType]; !ok {
+	if _, ok := listingTypeValues[l.ListingType]; !ok {
 		return errors.New("listing types allowed ['DEVELOPMENT', 'USED']")
 	}
 
@@ -73,8 +73,8 @@ func (l *Location) FinalValidation() []error {
 	}
 
 	// Valida Origem
-	config_sites := viper.GetStringMapString("sites")
-	sites := GetKeys(config_sites)
+	configSites := viper.GetStringMapString("sites")
+	sites := GetKeys(configSites)
 
 	if !Contains(sites, l.Origin) {
 		err = fmt.Errorf("sites need a %v but received '%s'", sites, l.Origin)

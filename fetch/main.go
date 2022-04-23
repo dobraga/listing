@@ -57,7 +57,7 @@ func main() {
 
 		var errs []error
 		wg := new(sync.WaitGroup)
-		channel_err := make(chan []error)
+		channelErr := make(chan []error)
 
 		for _, origin := range todosSites {
 			wg.Add(1)
@@ -69,15 +69,15 @@ func main() {
 
 				_, err := FetchListings(d, nl)
 				if err != nil {
-					channel_err <- err
+					channelErr <- err
 				}
 			}(origin, location, DB, wg)
 		}
 
 		wg.Wait()
-		close(channel_err)
+		close(channelErr)
 
-		for err := range channel_err {
+		for err := range channelErr {
 			errs = append(errs, err...)
 		}
 

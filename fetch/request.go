@@ -14,11 +14,11 @@ var client http.Client = http.Client{}
 func MakeRequest(location bool, origin string, query map[string]interface{}) []byte {
 	var url string
 
-	site_info := viper.Get("sites").(map[string]interface{})[origin].(map[string]interface{})
+	siteInfo := viper.Get("sites").(map[string]interface{})[origin].(map[string]interface{})
 	if location {
-		url = fmt.Sprintf("https://%s/v3/locations", site_info["api"])
+		url = fmt.Sprintf("https://%s/v3/locations", siteInfo["api"])
 	} else {
-		url = fmt.Sprintf("https://%s/v2/listings", site_info["api"])
+		url = fmt.Sprintf("https://%s/v2/listings", siteInfo["api"])
 	}
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -48,12 +48,12 @@ func MakeRequest(location bool, origin string, query map[string]interface{}) []b
 	defer resp.Body.Close()
 
 	// Response to interface
-	bytes_data, err := ioutil.ReadAll(resp.Body)
+	bytesData, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Error(fmt.Sprintf("Erro no parse da página '%s' %v: %v", url, query, err))
 	}
 
-	return bytes_data
+	return bytesData
 }
 
 func makeHeaders(origin string) map[string]string {

@@ -10,24 +10,24 @@ import (
 )
 
 func ListLocations(local string, origin string) ([]Location, error) {
-	var final_locations []Location
+	var finalLocations []Location
 
 	sites := viper.Get("sites")
 	if sites == nil {
 		return nil, errors.New("variável de sites vazia")
 	}
 
-	site_info := sites.(map[string]interface{})[origin].(map[string]interface{})
-	portal := site_info["portal"].(string)
+	siteInfo := sites.(map[string]interface{})[origin].(map[string]interface{})
+	portal := siteInfo["portal"].(string)
 
 	query := map[string]interface{}{
 		"q": local, "fields": "neighborhood", "portal": portal, "size": "6",
 	}
 
-	bytes_data := MakeRequest(true, origin, query)
+	bytesData := MakeRequest(true, origin, query)
 
 	data := map[string]interface{}{}
-	err := json.Unmarshal(bytes_data, &data)
+	err := json.Unmarshal(bytesData, &data)
 	if err != nil {
 		log.Error(fmt.Sprintf("Erro ao listar localizações %s: %v", local, err))
 	}
@@ -40,7 +40,7 @@ func ListLocations(local string, origin string) ([]Location, error) {
 	for _, location := range locations {
 		address := location.(map[string]interface{})["address"].(map[string]interface{})
 
-		s_location := Location{
+		sLocation := Location{
 			City:         address["city"].(string),
 			Zone:         address["zone"].(string),
 			State:        address["state"].(string),
@@ -49,8 +49,8 @@ func ListLocations(local string, origin string) ([]Location, error) {
 			StateAcronym: address["stateAcronym"].(string),
 		}
 
-		final_locations = append(final_locations, s_location)
+		finalLocations = append(finalLocations, sLocation)
 	}
 
-	return final_locations, nil
+	return finalLocations, nil
 }

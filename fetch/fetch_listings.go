@@ -27,28 +27,28 @@ func FetchListings(DB *gorm.DB, location Location) (string, []error) {
 
 	query := createQuery(location, size)
 
-	qtd_listings, err := qtdListings(origin, query)
+	qtdListings, err := qtdListings(origin, query)
 	if err != nil {
 		return "", []error{err}
 	}
-	total_pages := int64(qtd_listings / size)
+	total_pages := int64(qtdListings / size)
 	if max_page <= 0 {
 		max_page = total_pages
 	} else {
 		max_page = Min(max_page, total_pages)
 	}
 
-	log.Infof("Getting %d/%d pages with %d listings from '%s'", max_page, total_pages, qtd_listings, origin)
+	log.Infof("Getting %d/%d pages with %d listings from '%s'", max_page, total_pages, qtdListings, origin)
 
 	wg := new(sync.WaitGroup)
-	channel_err := make(chan error)
+	channelErr := make(chan error)
 
 	for page := 1; page <= int(max_page); page++ {
 		wg.Add(1)
 		log.Debugf("Getting page %d from '%s'", page, origin)
 		query["from"] = page * query["size"].(int)
 
-		bytes_data := MakeRequest(false, origin, query)
+		bytesData := MakeRequest(false, origin, query)
 
 		go func(p int, o, bt string, b []byte, d *gorm.DB, w *sync.WaitGroup, c chan error) {
 			defer w.Done()
@@ -68,7 +68,7 @@ func FetchListings(DB *gorm.DB, location Location) (string, []error) {
 			}
 			log.Debugf("Saved successfully %d from '%s'", p, o)
 
-		}(page, origin, location.BusinessType, bytes_data, DB, wg, channel_err)
+		}(page, origin, location.BusinessType, bytesData, DB, wg, channelErr)
 
 		if page < int(max_page) {
 			time.Sleep(300 * time.Millisecond)
@@ -76,9 +76,9 @@ func FetchListings(DB *gorm.DB, location Location) (string, []error) {
 	}
 
 	wg.Wait()
-	close(channel_err)
+	close(channelErr)
 
-	for err = range channel_err {
+	for err = range channelErr {
 		log.Info(err)
 		errs = append(errs, err)
 	}
@@ -90,14 +90,14 @@ func FetchListings(DB *gorm.DB, location Location) (string, []error) {
 
 func qtdListings(origin string, query map[string]interface{}) (int, error) {
 
-	bytes_data := MakeRequest(false, origin, query)
+	bytesData := MakeRequest(false, origin, query)
 
 	data := map[string]interface{}{}
-	err := json.Unmarshal(bytes_data, &data)
+	err := json.Unmarshal(bytesData, &data)
 	if err != nil {
 		err := fmt.Errorf(fmt.Sprintf(
 			"erro ao buscar a quantidade de propriedades da página '%s' '%v' '%v': %v",
-			origin, query, bytes_data, err,
+			origin, query, bytesData, err,
 		))
 		log.Error(err)
 		return 0, err
@@ -111,9 +111,9 @@ func qtdListings(origin string, query map[string]interface{}) (int, error) {
 
 	data = data["search"].(map[string]interface{})
 
-	qtd_listings := data["totalCount"].(float64)
+	qtdListings := data["totalCount"].(float64)
 
-	return int(qtd_listings), nil
+	return int(qtdListings), nil
 
 }
 
