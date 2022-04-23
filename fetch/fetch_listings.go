@@ -15,7 +15,7 @@ import (
 func FetchListings(DB *gorm.DB, location Location) (string, []error) {
 	var pageListings Property
 
-	errs := location.FinalValidation()
+	errs := location.Validation()
 	if errs != nil {
 		return "", errs
 	}

@@ -36,24 +36,6 @@ func main() {
 	})
 
 	r.GET("listings/:business_type/:listing_type/:city/:locationId/:neighborhood/:state/:stateAcronym/:zone", func(c *gin.Context) {
-		location := Location{
-			Local: Local{
-				City:         c.Param("city"),
-				Zone:         c.Param("zone"),
-				State:        c.Param("state"),
-				LocationId:   c.Param("locationId"),
-				Neighborhood: c.Param("neighborhood"),
-				StateAcronym: c.Param("stateAcronym"),
-			},
-			BusinessType: c.Param("business_type"),
-			ListingType:  c.Param("listing_type"),
-		}
-
-		err := location.Validation()
-		if err != nil {
-			c.Error(err)
-			return
-		}
 
 		var errs []error
 		wg := new(sync.WaitGroup)
@@ -62,16 +44,27 @@ func main() {
 		for _, origin := range todosSites {
 			wg.Add(1)
 
-			go func(o string, l Location, d *gorm.DB, wg *sync.WaitGroup) {
+			go func(o string, c *gin.Context, d *gorm.DB, wg *sync.WaitGroup) {
 				defer wg.Done()
-				nl := l
-				nl.Origin = o
+				location := Location{
+					Local: Local{
+						City:         c.Param("city"),
+						Zone:         c.Param("zone"),
+						State:        c.Param("state"),
+						LocationId:   c.Param("locationId"),
+						Neighborhood: c.Param("neighborhood"),
+						StateAcronym: c.Param("stateAcronym"),
+					},
+					BusinessType: c.Param("business_type"),
+					ListingType:  c.Param("listing_type"),
+					Origin:       o,
+				}
 
-				_, err := FetchListings(d, nl)
+				_, err := FetchListings(d, location)
 				if err != nil {
 					channelErr <- err
 				}
-			}(origin, location, DB, wg)
+			}(origin, c, DB, wg)
 		}
 
 		wg.Wait()

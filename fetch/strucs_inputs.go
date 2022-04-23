@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/spf13/viper"
@@ -11,38 +10,32 @@ var businessTypeValues = map[string]bool{"RENTAL": true, "SALE": true}
 var listingTypeValues = map[string]bool{"DEVELOPMENT": true, "USED": true}
 
 type Local struct {
-	City         string
-	Zone         string
-	State        string
-	LocationId   string
-	Neighborhood string
-	StateAcronym string
+	City         string `json:"city"`
+	Zone         string `json:"zone"`
+	State        string `json:"state"`
+	LocationId   string `json:"locationId"`
+	Neighborhood string `json:"neighborhood"`
+	StateAcronym string `json:"stateAcronym"`
 }
 
 type Location struct {
-	Local        Local
-	BusinessType string
-	ListingType  string
-	Origin       string
+	Local        Local  `json:"local"`
+	BusinessType string `json:"businessType"`
+	ListingType  string `json:"listingType"`
+	Origin       string `json:"origin"`
 }
 
-func (l *Location) Validation() error {
+func (l *Location) Validation() []error {
+	var errs []error
+	var err error
+
 	if _, ok := businessTypeValues[l.BusinessType]; !ok {
-		return errors.New("business types allowed ['RENTAL', 'SALE']")
+		err = fmt.Errorf("business types allowed ['RENTAL', 'SALE']")
+		errs = append(errs, err)
 	}
 
 	if _, ok := listingTypeValues[l.ListingType]; !ok {
-		return errors.New("listing types allowed ['DEVELOPMENT', 'USED']")
-	}
-
-	return nil
-}
-
-func (l *Location) FinalValidation() []error {
-	var errs []error
-
-	err := l.Validation()
-	if err != nil {
+		err = fmt.Errorf("listing types allowed ['DEVELOPMENT', 'USED']")
 		errs = append(errs, err)
 	}
 

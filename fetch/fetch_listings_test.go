@@ -26,7 +26,7 @@ func TestFetchListing(t *testing.T) {
 		Origin:       "vivareal",
 	}
 
-	errs := location.FinalValidation()
+	errs := location.Validation()
 	if errs != nil {
 		t.Errorf("%v", errs)
 	}
