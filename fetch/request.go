@@ -5,14 +5,14 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 var client http.Client = http.Client{}
 
-func MakeRequest(location bool, origin string, query map[string]interface{}) []byte {
+func MakeRequest(location bool, origin string, query map[string]interface{}) ([]byte, error) {
 	var url string
+	var err error
 
 	siteInfo := viper.Get("sites").(map[string]interface{})[origin].(map[string]interface{})
 	if location {
@@ -23,7 +23,7 @@ func MakeRequest(location bool, origin string, query map[string]interface{}) []b
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Error(fmt.Sprintf("Erro na requisição da página '%s': %v", url, err))
+		return nil, fmt.Errorf("Erro na requisição da página '%s': %v", url, err)
 	}
 
 	// Query String
@@ -43,17 +43,21 @@ func MakeRequest(location bool, origin string, query map[string]interface{}) []b
 	// Request
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Error(fmt.Sprintf("Erro na requisição da página '%s' %v: %v", url, query, err))
+		return nil, fmt.Errorf("Erro na requisição da página '%s' %v: %v", url, query, err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("Erro na requisição da página '%s' %v: status code %v", url, query, http.StatusOK)
+	}
 
 	// Response to interface
 	bytesData, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Error(fmt.Sprintf("Erro no parse da página '%s' %v: %v", url, query, err))
+		return nil, fmt.Errorf("Erro no parse da página '%s' %v: %v", url, query, err)
 	}
 
-	return bytesData
+	return bytesData, nil
 }
 
 func makeHeaders(origin string) map[string]string {
