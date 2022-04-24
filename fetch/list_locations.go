@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -25,12 +24,15 @@ func ListLocations(local string, origin string) ([]Local, error) {
 		"q": local, "fields": "neighborhood", "portal": portal, "size": "6",
 	}
 
-	bytesData := MakeRequest(true, origin, query)
+	bytesData, err := MakeRequest(true, origin, query)
+	if err != nil {
+		return nil, err
+	}
 
 	data := map[string]interface{}{}
-	err := json.Unmarshal(bytesData, &data)
+	err = json.Unmarshal(bytesData, &data)
 	if err != nil {
-		log.Error(fmt.Sprintf("Erro ao listar localizações %s: %v", local, err))
+		return nil, fmt.Errorf("erro ao listar localizações %s: %v", local, err)
 	}
 
 	// Interface to map and get listings

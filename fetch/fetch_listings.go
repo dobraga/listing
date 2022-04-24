@@ -48,7 +48,11 @@ func FetchListings(DB *gorm.DB, location Location) (string, []error) {
 		log.Debugf("Getting page %d from '%s'", page, origin)
 		query["from"] = page * query["size"].(int)
 
-		bytesData := MakeRequest(false, origin, query)
+		bytesData, err := MakeRequest(false, origin, query)
+		if err != nil {
+			log.Error(err)
+			continue
+		}
 
 		go func(p int, l Location, b []byte, d *gorm.DB, w *sync.WaitGroup, c chan error) {
 			defer w.Done()
@@ -90,10 +94,14 @@ func FetchListings(DB *gorm.DB, location Location) (string, []error) {
 
 func qtdListings(origin string, query map[string]interface{}) (int, error) {
 
-	bytesData := MakeRequest(false, origin, query)
+	bytesData, err := MakeRequest(false, origin, query)
+	if err != nil {
+		log.Error(err)
+		return 0, err
+	}
 
 	data := map[string]interface{}{}
-	err := json.Unmarshal(bytesData, &data)
+	err = json.Unmarshal(bytesData, &data)
 	if err != nil {
 		err := fmt.Errorf(fmt.Sprintf(
 			"erro ao buscar a quantidade de propriedades da página '%s' '%v' '%v': %v",
