@@ -26,6 +26,7 @@ type Property struct {
 	Url           string `gorm:"primaryKey"`
 	Neighborhood  string
 	State         string
+	StateAcronym  string
 	City          string
 	Zone          string
 	BusinessType  string `gorm:"primaryKey"`
@@ -48,7 +49,7 @@ type Property struct {
 	Images        string
 }
 
-func (p *Property) Unmarshal(bytesData []byte, url, BusinessType string) ([]Property, error) {
+func (p *Property) Unmarshal(bytesData []byte, l Location) ([]Property, error) {
 	var listNestedProperty []NestedProperty
 	var listProperty []Property
 	medias := []string{}
@@ -89,7 +90,7 @@ func (p *Property) Unmarshal(bytesData []byte, url, BusinessType string) ([]Prop
 		amenities := strings.Join(nestedProperty.Listing.Amenities, "|")
 
 		for _, PricingInfos := range nestedProperty.Listing.PricingInfos {
-			if PricingInfos.BusinessType == BusinessType {
+			if PricingInfos.BusinessType == l.BusinessType {
 				price, err := strconv.ParseFloat(PricingInfos.Price, 32)
 				if err != nil {
 					log.Error(fmt.Sprintf("Erro na transformação do valor '%s' para float: %v", PricingInfos.Price, err))
@@ -100,13 +101,14 @@ func (p *Property) Unmarshal(bytesData []byte, url, BusinessType string) ([]Prop
 				strUsableArea := GetFirst(nestedProperty.Listing.UsableAreas, property.Url, "UsableAreas")
 				usableArea, _ := strconv.Atoi(strUsableArea)
 
-				property.Origin = url
+				property.Origin = l.Origin
 				property.Url = nestedProperty.Link.Href
-				property.Neighborhood = nestedProperty.Listing.Address.Neighborhood
-				property.State = nestedProperty.Listing.Address.State
-				property.City = nestedProperty.Listing.Address.City
-				property.Zone = nestedProperty.Listing.Address.Zone
-				property.BusinessType = BusinessType
+				property.Neighborhood = l.Local.Neighborhood
+				property.State = l.Local.State
+				property.StateAcronym = l.Local.StateAcronym
+				property.City = l.Local.City
+				property.Zone = l.Local.Zone
+				property.BusinessType = l.BusinessType
 				property.ListingType = nestedProperty.Listing.ListingType
 				property.Title = nestedProperty.Listing.Title
 				property.UsableArea = usableArea

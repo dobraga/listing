@@ -50,25 +50,25 @@ func FetchListings(DB *gorm.DB, location Location) (string, []error) {
 
 		bytesData := MakeRequest(false, origin, query)
 
-		go func(p int, o, bt string, b []byte, d *gorm.DB, w *sync.WaitGroup, c chan error) {
+		go func(p int, l Location, b []byte, d *gorm.DB, w *sync.WaitGroup, c chan error) {
 			defer w.Done()
 
-			l, err := pageListings.Unmarshal(b, o, bt)
+			listings, err := pageListings.Unmarshal(b, l)
 			if err != nil {
-				log.Errorf("Parsed error page %d from '%s': %v", p, o, err)
+				log.Errorf("Parsed error page %d from '%s': %v", p, l.Origin, err)
 				c <- err
 				return
 			}
 
-			result := d.Clauses(clause.OnConflict{DoNothing: true}).Create(l)
+			result := d.Clauses(clause.OnConflict{DoNothing: true}).Create(listings)
 			if result.Error != nil {
 				log.Error(result.Error)
 				c <- err
 				return
 			}
-			log.Debugf("Saved successfully %d from '%s'", p, o)
+			log.Debugf("Saved successfully %d from '%s'", p, l.Origin)
 
-		}(page, origin, location.BusinessType, bytesData, DB, wg, channelErr)
+		}(page, location, bytesData, DB, wg, channelErr)
 
 		if page < int(maxPage) {
 			time.Sleep(300 * time.Millisecond)
