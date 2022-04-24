@@ -23,7 +23,7 @@ func MakeRequest(location bool, origin string, query map[string]interface{}) ([]
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("Erro na requisição da página '%s': %v", url, err)
+		return nil, fmt.Errorf("erro na requisição da página '%s': %v", url, err)
 	}
 
 	// Query String
@@ -43,18 +43,18 @@ func MakeRequest(location bool, origin string, query map[string]interface{}) ([]
 	// Request
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("Erro na requisição da página '%s' %v: %v", url, query, err)
+		return nil, fmt.Errorf("erro na requisição da página '%s' %v: %v", url, query, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Erro na requisição da página '%s' %v: status code %v", url, query, http.StatusOK)
+		return nil, fmt.Errorf("erro na requisição da página '%s' %v: status code %v", url, query, http.StatusOK)
 	}
 
 	// Response to interface
 	bytesData, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("Erro no parse da página '%s' %v: %v", url, query, err)
+		return nil, fmt.Errorf("erro no parse da página '%s' %v: %v", url, query, err)
 	}
 
 	return bytesData, nil
