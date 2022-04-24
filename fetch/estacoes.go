@@ -57,7 +57,7 @@ func savePageStations(db *gorm.DB, pages []PageStation) {
 			defer w.Done()
 
 			station := fetchStation(p)
-			db.Clauses(clause.OnConflict{DoNothing: true}).Create(station)
+			db.Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(station, 50)
 		}(page, wg)
 	}
 
