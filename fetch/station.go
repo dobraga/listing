@@ -25,25 +25,7 @@ type PageStation struct {
 
 func SaveStations(db *gorm.DB) {
 	pages := listStations()
-
-	log.Debug(pages)
-
 	savePageStations(db, pages)
-}
-
-func readUrlsSettings() [][2]string {
-	urlMetroTrem := viper.GetStringMap("metro_trem")
-	allUrls := [][2]string{}
-
-	for uf, urls := range urlMetroTrem {
-		mapUrls := urls.(map[string]interface{})
-
-		for _, url := range mapUrls["urls"].([]interface{}) {
-			allUrls = append(allUrls, [2]string{uf, url.(string)})
-		}
-	}
-
-	return allUrls
 }
 
 func savePageStations(db *gorm.DB, pages []PageStation) {
@@ -119,6 +101,21 @@ func listStations() []PageStation {
 	}
 
 	return output
+}
+
+func readUrlsSettings() [][2]string {
+	urlMetroTrem := viper.GetStringMap("metro_trem")
+	allUrls := [][2]string{}
+
+	for uf, urls := range urlMetroTrem {
+		mapUrls := urls.(map[string]interface{})
+
+		for _, url := range mapUrls["urls"].([]interface{}) {
+			allUrls = append(allUrls, [2]string{uf, url.(string)})
+		}
+	}
+
+	return allUrls
 }
 
 func fetchStation(page PageStation) Station {
