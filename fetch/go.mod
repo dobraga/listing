@@ -10,6 +10,7 @@ require (
 	github.com/spf13/viper v1.10.1
 	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2
 	gorm.io/driver/postgres v1.3.4
+	gorm.io/driver/sqlite v1.3.1
 	gorm.io/gorm v1.23.4
 )
 
@@ -54,5 +55,4 @@ require (
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/ini.v1 v1.66.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gorm.io/driver/sqlite v1.3.1 // indirect
 )
