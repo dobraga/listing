@@ -34,7 +34,7 @@ def init_app(app: Dash) -> Dash:
         df = pd.DataFrame(data)
         total = df.shape[0]
         qtd_sem_latlon = (df[["lat", "lon"]].max(axis=1) != 0).sum()
-        df = df.query("lat != 0 or lon != 0").head(10)
+        df = df.query("lat != 0 or lon != 0").head(150)
 
         map = Map(
             location=df[["lat", "lon"]].mean().values,
