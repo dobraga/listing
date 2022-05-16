@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "front"
+version = "0.1.0"
+description = ""
+authors = ["Douglas Braga <30268535+dobraga@users.noreply.github.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+dash = "^2.3.1"
+dash-bootstrap-components = "^1.1.0"
+gunicorn = "^20.1.0"
+requests = "^2.27.1"
+python-dotenv = "^0.20.0"
+SQLAlchemy = "^1.4.36"
+psycopg2-binary = "^2.9.3"
+pandas = "^1.4.2"
+folium = "^0.12.1"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+types-requests = "^2.27.25"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
