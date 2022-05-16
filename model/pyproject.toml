@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "model"
+version = "0.1.0"
+description = ""
+authors = ["Douglas Braga <30268535+dobraga@users.noreply.github.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+scikit-learn = "^1.0.2"
+SQLAlchemy = "^1.4.36"
+python-dotenv = "^0.20.0"
+psycopg2-binary = "^2.9.3"
+pandas = "^1.4.2"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+ipykernel = "^6.13.0"
+mypy = "^0.950"
+black = "^22.3.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
