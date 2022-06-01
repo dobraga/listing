@@ -64,13 +64,23 @@ func FetchListings(DB *gorm.DB, location Location) (string, []error) {
 				return
 			}
 
-			result := d.Clauses(clause.OnConflict{DoNothing: true}).Create(listings)
-			if result.Error != nil {
-				log.Error(result.Error)
-				c <- err
-				return
+			qtd_listings := len(listings)
+			if qtd_listings > 0 {
+				result := d.Clauses(
+					clause.OnConflict{DoNothing: true}).Create(listings)
+				if result.Error != nil {
+					log.Error(result.Error)
+					c <- err
+					return
+				}
+				log.Debugf(
+					"Saved successfully page %d with %d listings from '%s'",
+					p, qtd_listings, l.Origin)
+			} else {
+				log.Warnf(
+					"Page %d with %d listings from '%s'",
+					p, qtd_listings, l.Origin)
 			}
-			log.Debugf("Saved successfully %d from '%s'", p, l.Origin)
 
 		}(page, location, bytesData, DB, wg, channelErr)
 
