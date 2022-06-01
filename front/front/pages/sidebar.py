@@ -198,7 +198,7 @@ def init_app(app: Dash) -> Dash:
         if not value:
             raise PreventUpdate
 
-        r = requests.get(f"http://127.0.0.1:{environ['PORT']}/locations/{value}")
+        r = requests.get(f"http://fetch:{environ['PORT']}/locations/{value}")
         r.raise_for_status()
 
         locations = r.json()
@@ -251,20 +251,20 @@ def init_app(app: Dash) -> Dash:
         listing_type = [o for o in depara_tp_listings if o["value"] == listing_value]
         listing_type = listing_type[0]["value"]
 
-        # url = (
-        #     f"http://127.0.0.1:{environ['PORT']}/listings/{business_type}/{listing_type}/"
-        #     "{}/{}/{}/{}/{}/{}".format(
-        #         selected_location["city"],
-        #         selected_location["locationId"],
-        #         selected_location["neighborhood"],
-        #         selected_location["state"],
-        #         selected_location["stateAcronym"],
-        #         selected_location["zone"],
-        #     )
-        # )
+        url = (
+            f"http://fetch:{environ['PORT']}/listings/{business_type}/{listing_type}/"
+            "{}/{}/{}/{}/{}/{}".format(
+                selected_location["city"],
+                selected_location["locationId"],
+                selected_location["neighborhood"],
+                selected_location["state"],
+                selected_location["stateAcronym"],
+                selected_location["zone"],
+            )
+        )
 
-        # r = requests.get(url)
-        # r.raise_for_status()
+        r = requests.get(url)
+        r.raise_for_status()
 
         df = pd.read_sql_query(
             f"""
