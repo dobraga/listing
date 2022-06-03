@@ -48,7 +48,7 @@ func MakeRequest(location bool, origin string, query map[string]interface{}) ([]
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("erro na requisição da página '%s' %v: status code %v", url, query, http.StatusOK)
+		return nil, fmt.Errorf("erro na requisição da página '%s' %v: status code %v", url, query, resp.StatusCode)
 	}
 
 	// Response to interface
