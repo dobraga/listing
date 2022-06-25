@@ -67,7 +67,7 @@ func FetchListings(DB *gorm.DB, location Location) (string, []error) {
 			qtd_listings := len(listings)
 			if qtd_listings > 0 {
 				result := d.Clauses(
-					clause.OnConflict{DoNothing: true}).Create(listings)
+					clause.OnConflict{UpdateAll: true}).Create(listings)
 				if result.Error != nil {
 					log.Error(result.Error)
 					c <- err
@@ -85,7 +85,7 @@ func FetchListings(DB *gorm.DB, location Location) (string, []error) {
 		}(page, location, bytesData, DB, wg, channelErr)
 
 		if page < int(maxPage) {
-			time.Sleep(300 * time.Millisecond)
+			time.Sleep(2 * time.Second)
 		}
 	}
 
