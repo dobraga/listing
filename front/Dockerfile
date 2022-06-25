@@ -8,8 +8,8 @@ RUN apt-get update && \
 WORKDIR /app
 
 COPY .env ./
-COPY front/front/ ./front
-COPY front/requirements.txt ./
+COPY front/ ./front
+COPY requirements.txt ./
 
 RUN pip3 install -r requirements.txt
 

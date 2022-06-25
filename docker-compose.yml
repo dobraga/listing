@@ -21,13 +21,13 @@ services:
     fetch:
         hostname: fetch
         build: 
-            context: ./
-            dockerfile: ./docker/fetch.Dockerfile
+            context: ./fetch/
+            dockerfile: Dockerfile
         restart: always
         env_file: 
             - ./.env
         ports:
-            - ${PORT}:${PORT}
+            - ${BACKEND_PORT}:${BACKEND_PORT}
         networks:
             - network
         depends_on:
@@ -36,8 +36,8 @@ services:
 
     front:
         build: 
-            context: ./
-            dockerfile: ./docker/front.Dockerfile
+            context: ./front/
+            dockerfile: Dockerfile
         restart: always
         env_file:
             - ./.env

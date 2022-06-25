@@ -5,11 +5,11 @@ WORKDIR /app
 
 COPY .env ./
 COPY settings.toml ./
-COPY fetch/go.mod ./
-COPY fetch/go.sum ./
+COPY go.mod ./
+COPY go.sum ./
 RUN go mod download
 
-COPY fetch/*.go ./
+COPY ./*.go ./
 
 RUN go build -o /go-listing
 
