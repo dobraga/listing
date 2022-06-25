@@ -11,6 +11,7 @@ from front.components.box import box
 layout = html.Div(
     [
         html.Div(id="qtd_sem_latlon"),
+        html.Br(),
         html.Iframe(
             id="map",
             srcDoc=Map(height="89%")._repr_html_(),
