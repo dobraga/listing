@@ -240,7 +240,7 @@ def init_app(app: Dash) -> Dash:
 
         engine = create_engine(
             f"postgresql://{environ['POSTGRES_USER']}:{environ['POSTGRES_PASSWORD']}"
-            f"@localhost:{environ['POSTGRES_PORT']}/{environ['POSTGRES_DB']}"
+            f"@db:{environ['POSTGRES_PORT']}/{environ['POSTGRES_DB']}"
         )
 
         selected_location = [l for l in locations if l["locationId"] == value][0]
