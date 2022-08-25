@@ -1,8 +1,6 @@
 package main
 
-import (
-	"testing"
-)
+import "testing"
 
 func TestListLocations(t *testing.T) {
 	LoadSettings()
