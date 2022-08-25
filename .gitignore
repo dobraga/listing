@@ -3,3 +3,4 @@ go_listings
 *.sql
 *.db
 *.pyc
+.vscode/
