@@ -7,6 +7,8 @@ from dash.dependencies import Input, Output
 
 from front.components.box import box
 
+N = 500
+
 
 layout = html.Div(
     [
@@ -35,7 +37,7 @@ def init_app(app: Dash) -> Dash:
         df = pd.DataFrame(data)
         total = df.shape[0]
         qtd_sem_latlon = (df[["lat", "lon"]].max(axis=1) != 0).sum()
-        df = df.query("lat != 0 or lon != 0").head(150)
+        df = df.query("lat != 0 or lon != 0").head(N)
 
         map = Map(
             location=df[["lat", "lon"]].mean().values,
@@ -53,7 +55,7 @@ def init_app(app: Dash) -> Dash:
             ).add_to(marker_cluster)
 
         return (
-            f"Exibindo 150 imoveis do total de {total} imóveis sendo {qtd_sem_latlon} sem latitude ou longitude",
+            f"Exibindo {N} imoveis do total de {total} imóveis sendo {qtd_sem_latlon} sem latitude ou longitude",
             map._repr_html_(),
         )
 
