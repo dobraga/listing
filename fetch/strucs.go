@@ -21,6 +21,14 @@ type Station struct {
 	URLLinha string
 }
 
+type PageStation struct {
+	Uf       string
+	Title    string
+	Linha    string
+	Url      string
+	URLLinha string
+}
+
 type Property struct {
 	Origin        string `gorm:"primaryKey"`
 	Url           string `gorm:"primaryKey"`
