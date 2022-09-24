@@ -1,0 +1,48 @@
+---
+title: "Exploration data"
+format:
+  html:
+    code-fold: true
+jupyter: python3
+---
+
+```{python}
+from plotly import graph_objects as go
+from sqlalchemy import create_engine
+from model.settings import settings
+import seaborn as sns
+import pandas as pd
+
+pd.options.display.float_format = '{:,.2f}'.format
+```
+
+```{python}
+engine = create_engine(f"postgresql://{settings['POSTGRES_USER']}:{settings['POSTGRES_PASSWORD']}@localhost:{settings['POSTGRES_PORT']}/{settings['POSTGRES_DB']}")
+
+df = pd.read_sql_query("""
+SELECT
+    url, origin, neighborhood, zone, state_acronym, business_type, listing_type,
+    usable_area, floors, unit_types, bedrooms, bathrooms, suites, parking_spaces,
+    amenities, lat, lon, price, condo_fee, created_date
+FROM properties
+""", engine).set_index(["url", "origin"])
+
+print(df.shape)
+
+(
+  df.groupby(['neighborhood', 'business_type'])[['price', 'condo_fee']]
+  .describe(percentiles=[0.05, 0.15, 0.25, 0.5, 0.75, 0.85, 0.95]).T
+)
+```
+
+
+```{python}
+g = sns.FacetGrid(df, col="business_type", sharex=False, sharey=False)
+g.map(sns.histplot, "price")
+```
+
+
+```{python}
+g = sns.FacetGrid(df, col="neighborhood", row="business_type", sharex=False, sharey=False)
+g.map(sns.histplot, "price")
+```
