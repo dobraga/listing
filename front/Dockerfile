@@ -8,6 +8,7 @@ RUN apt-get update && \
 WORKDIR /app
 
 COPY .env ./
+COPY settings.toml ./
 COPY front/ ./front
 COPY requirements.txt ./
 

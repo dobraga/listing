@@ -1,5 +1,6 @@
 from dash import Dash
 from dash import dcc, html
+from dynaconf import LazySettings
 
 from front.pages import sidebar, navbar, table, map
 
@@ -21,9 +22,9 @@ layout = dcc.Loading(
 )
 
 
-def init_app(dash: Dash) -> Dash:
+def init_app(dash: Dash, settings: LazySettings) -> Dash:
     dash.layout = layout
-    dash = sidebar.init_app(dash)
+    dash = sidebar.init_app(dash, settings)
     dash = table.init_app(dash)
     dash = map.init_app(dash)
     return dash

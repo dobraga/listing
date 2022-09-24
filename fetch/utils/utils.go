@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"fmt"
@@ -26,7 +26,7 @@ func Contains(s []string, e string) bool {
 	return false
 }
 
-func Min(x, y int64) int64 {
+func Min[T int64 | int | float64 | float32](x, y T) T {
 	if x > y {
 		return y
 	}

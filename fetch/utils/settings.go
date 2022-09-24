@@ -1,9 +1,11 @@
-package main
+package utils
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -17,13 +19,27 @@ func LoadSettings() {
 	}
 	log.Debug("Loaded .env")
 
-	env := viper.Get("ENV").(string)
+	env := viper.GetString("ENV")
 
 	log.Info(fmt.Sprintf("Utilizando '%s' env", env))
 
+	format := &log.JSONFormatter{}
+	log.SetFormatter(format)
+
 	switch env {
 	case "DEVELOPMENT":
+		f, err := os.OpenFile(".log", os.O_WRONLY|os.O_CREATE, 0755)
+		if err != nil {
+			panic(err)
+		}
+		logrus.SetOutput(f)
 		log.SetLevel(log.DebugLevel)
+
+		// use postgres or sqllite
+		if viper.GetString("DEVELOPMENT_DATABASE") == "postgres" {
+			viper.Set("POSTGRES_HOST", "localhost")
+		}
+
 	case "PRODUCTION":
 		gin.SetMode(gin.ReleaseMode)
 		log.SetLevel(log.InfoLevel)

@@ -1,110 +1,70 @@
-package main
+package property
 
 import (
 	"encoding/json"
+	"fetch/utils"
 	"fmt"
-	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
-func FetchListings(DB *gorm.DB, location Location) (string, []error) {
-	var pageListings Property
-
-	errs := location.Validation()
-	if errs != nil {
-		return "", errs
-	}
-
+func FetchProperties(db *gorm.DB, config SearchConfig, maxPage int) []error {
+	var properties []Property
 	size := 24
-	origin := location.Origin
+	query := createQuery(config, size)
 
-	maxPage := viper.GetInt64("max_page")
-
-	query := createQuery(location, size)
-
-	qtdListings, err := qtdListings(origin, query)
+	qtdListings, err := qtdListings(config, query)
 	if err != nil {
-		return "", []error{err}
+		return []error{err}
 	}
-	total_pages := int64(qtdListings / size)
-	if maxPage <= 0 {
+	total_pages := int(qtdListings / size)
+	if maxPage < 0 {
 		maxPage = total_pages
 	} else {
-		maxPage = Min(maxPage, total_pages)
+		maxPage = utils.Min(maxPage, total_pages)
 	}
+	log.Infof("Getting %d/%d pages with %d total listings from '%s'", maxPage, total_pages, qtdListings, config.Origin)
 
-	log.Infof("Getting %d/%d pages with %d listings from '%s'", maxPage, total_pages, qtdListings, origin)
-
-	wg := new(sync.WaitGroup)
-	channelErr := make(chan error)
-
-	for page := 1; page <= int(maxPage); page++ {
-		wg.Add(1)
-		log.Debugf("Getting page %d from '%s'", page, origin)
+	for page := 0; page <= maxPage; page++ {
+		log.Debugf("Getting page %d from '%s'", page, config.Origin)
 		query["from"] = page * query["size"].(int)
 
-		bytesData, err := MakeRequest(false, origin, query)
+		bytesData, err := MakeRequest(false, config.Origin, query)
 		if err != nil {
 			log.Error(err)
 			continue
 		}
 
-		go func(p int, l Location, b []byte, d *gorm.DB, w *sync.WaitGroup, c chan error) {
-			defer w.Done()
+		property, err := UnmarshalProperty(bytesData, config)
+		if err != nil {
+			log.Error(err)
+			continue
+		}
 
-			listings, err := pageListings.Unmarshal(b, l)
-			if err != nil {
-				log.Errorf("Parsed error page %d from '%s': %v", p, l.Origin, err)
-				c <- err
-				return
-			}
+		log.Infof("add %d properties from page %d '%s'", len(property), page, config.Origin)
+		properties = append(properties, property...)
 
-			qtd_listings := len(listings)
-			if qtd_listings > 0 {
-				result := d.Clauses(
-					clause.OnConflict{UpdateAll: true}).Create(listings)
-				if result.Error != nil {
-					log.Error(result.Error)
-					c <- err
-					return
-				}
-				log.Debugf(
-					"Saved successfully page %d with %d listings from '%s'",
-					p, qtd_listings, l.Origin)
-			} else {
-				log.Warnf(
-					"Page %d with %d listings from '%s'",
-					p, qtd_listings, l.Origin)
-			}
-
-		}(page, location, bytesData, DB, wg, channelErr)
-
-		if page < int(maxPage) {
+		if page < maxPage {
+			log.Debugf("Sleeping after extract %d page", page)
 			time.Sleep(2 * time.Second)
 		}
 	}
 
-	wg.Wait()
-	close(channelErr)
-
-	for err = range channelErr {
-		log.Info(err)
-		errs = append(errs, err)
+	log.Infof("Inserting %d properties from '%s' to database", len(properties), config.Origin)
+	result := db.Clauses(clause.OnConflict{UpdateAll: true}).CreateInBatches(properties, 500)
+	if result.Error != nil {
+		return []error{result.Error}
 	}
 
-	log.Infof("Saved %d pages from '%s'", maxPage, origin)
-
-	return fmt.Sprintf("Saved %d pages from '%s'", maxPage, origin), errs
+	log.Infof("Saved %d pages from '%s'", maxPage, config.Origin)
+	return nil
 }
 
-func qtdListings(origin string, query map[string]interface{}) (int, error) {
-
-	bytesData, err := MakeRequest(false, origin, query)
+func qtdListings(config SearchConfig, query map[string]interface{}) (int, error) {
+	bytesData, err := MakeRequest(false, config.Origin, query)
 	if err != nil {
 		log.Error(err)
 		return 0, err
@@ -115,36 +75,33 @@ func qtdListings(origin string, query map[string]interface{}) (int, error) {
 	if err != nil {
 		err := fmt.Errorf(fmt.Sprintf(
 			"erro ao buscar a quantidade de propriedades da página '%s' '%v' '%v': %v",
-			origin, query, bytesData, err,
+			config.Origin, query, bytesData, err,
 		))
 		log.Error(err)
 		return 0, err
 	}
 
-	if !Contains(GetKeys(data), "search") {
-		err := fmt.Errorf("not found search listings '%v' from '%s' '%v'", data, origin, query)
+	if !utils.Contains(utils.GetKeys(data), "search") {
+		err := fmt.Errorf("not found search listings '%v' from '%s' '%v'", data, config.Origin, query)
 		log.Error(err)
 		return 0, err
 	}
 
 	data = data["search"].(map[string]interface{})
-
-	qtdListings := data["totalCount"].(float64)
-
-	return int(qtdListings), nil
-
+	qtd := data["totalCount"]
+	return int(qtd.(float64)), nil
 }
 
-func createQuery(location Location, size int) map[string]interface{} {
+func createQuery(config SearchConfig, size int) map[string]interface{} {
 	return map[string]interface{}{
 		"includeFields":       "search(result(listings(listing(displayAddressType,amenities,usableAreas,constructionStatus,listingType,description,title,stamps,createdAt,floors,unitTypes,nonActivationReason,providerId,propertyType,unitSubTypes,unitsOnTheFloor,legacyId,id,portal,unitFloor,parkingSpaces,updatedAt,address,suites,publicationType,externalId,bathrooms,usageTypes,totalAreas,advertiserId,advertiserContact,whatsappNumber,bedrooms,acceptExchange,pricingInfos,showPrice,resale,buildings,capacityLimit,status),account(id,name,logoUrl,licenseNumber,showAddress,legacyVivarealId,legacyZapId,minisite),medias,accountLink,link)),totalCount),expansion(search(result(listings(listing(displayAddressType,amenities,usableAreas,constructionStatus,listingType,description,title,stamps,createdAt,floors,unitTypes,nonActivationReason,providerId,propertyType,unitSubTypes,unitsOnTheFloor,legacyId,id,portal,unitFloor,parkingSpaces,updatedAt,address,suites,publicationType,externalId,bathrooms,usageTypes,totalAreas,advertiserId,advertiserContact,whatsappNumber,bedrooms,acceptExchange,pricingInfos,showPrice,resale,buildings,capacityLimit,status),account(id,name,logoUrl,licenseNumber,showAddress,legacyVivarealId,legacyZapId,minisite),medias,accountLink,link)),totalCount)),nearby(search(result(listings(listing(displayAddressType,amenities,usableAreas,constructionStatus,listingType,description,title,stamps,createdAt,floors,unitTypes,nonActivationReason,providerId,propertyType,unitSubTypes,unitsOnTheFloor,legacyId,id,portal,unitFloor,parkingSpaces,updatedAt,address,suites,publicationType,externalId,bathrooms,usageTypes,totalAreas,advertiserId,advertiserContact,whatsappNumber,bedrooms,acceptExchange,pricingInfos,showPrice,resale,buildings,capacityLimit,status),account(id,name,logoUrl,licenseNumber,showAddress,legacyVivarealId,legacyZapId,minisite),medias,accountLink,link)),totalCount)),page,fullUriFragments,developments(search(result(listings(listing(displayAddressType,amenities,usableAreas,constructionStatus,listingType,description,title,stamps,createdAt,floors,unitTypes,nonActivationReason,providerId,propertyType,unitSubTypes,unitsOnTheFloor,legacyId,id,portal,unitFloor,parkingSpaces,updatedAt,address,suites,publicationType,externalId,bathrooms,usageTypes,totalAreas,advertiserId,advertiserContact,whatsappNumber,bedrooms,acceptExchange,pricingInfos,showPrice,resale,buildings,capacityLimit,status),account(id,name,logoUrl,licenseNumber,showAddress,legacyVivarealId,legacyZapId,minisite),medias,accountLink,link)),totalCount)),superPremium(search(result(listings(listing(displayAddressType,amenities,usableAreas,constructionStatus,listingType,description,title,stamps,createdAt,floors,unitTypes,nonActivationReason,providerId,propertyType,unitSubTypes,unitsOnTheFloor,legacyId,id,portal,unitFloor,parkingSpaces,updatedAt,address,suites,publicationType,externalId,bathrooms,usageTypes,totalAreas,advertiserId,advertiserContact,whatsappNumber,bedrooms,acceptExchange,pricingInfos,showPrice,resale,buildings,capacityLimit,status),account(id,name,logoUrl,licenseNumber,showAddress,legacyVivarealId,legacyZapId,minisite),medias,accountLink,link)),totalCount)),owners(search(result(listings(listing(displayAddressType,amenities,usableAreas,constructionStatus,listingType,description,title,stamps,createdAt,floors,unitTypes,nonActivationReason,providerId,propertyType,unitSubTypes,unitsOnTheFloor,legacyId,id,portal,unitFloor,parkingSpaces,updatedAt,address,suites,publicationType,externalId,bathrooms,usageTypes,totalAreas,advertiserId,advertiserContact,whatsappNumber,bedrooms,acceptExchange,pricingInfos,showPrice,resale,buildings,capacityLimit,status),account(id,name,logoUrl,licenseNumber,showAddress,legacyVivarealId,legacyZapId,minisite),medias,accountLink,link)),totalCount))",
-		"addressNeighborhood": location.Local.Neighborhood,
-		"addressLocationId":   location.Local.LocationId,
-		"addressState":        location.Local.State,
-		"addressCity":         location.Local.City,
-		"addressZone":         location.Local.Zone,
-		"listingType":         location.ListingType,
-		"business":            location.BusinessType,
+		"addressNeighborhood": config.Local.Neighborhood,
+		"addressLocationId":   config.Local.LocationId,
+		"addressState":        config.Local.State,
+		"addressCity":         config.Local.City,
+		"addressZone":         config.Local.Zone,
+		"listingType":         config.ListingType,
+		"business":            config.BusinessType,
 		"usageTypes":          "RESIDENTIAL",
 		"categoryPage":        "RESULT",
 		"size":                size,

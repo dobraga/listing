@@ -1,13 +1,18 @@
-package main
+package property
 
 import (
 	"fmt"
-
-	"github.com/spf13/viper"
 )
 
 var businessTypeValues = map[string]bool{"RENTAL": true, "SALE": true}
 var listingTypeValues = map[string]bool{"DEVELOPMENT": true, "USED": true}
+
+type SearchConfig struct {
+	Local        Local  `json:"local"`
+	BusinessType string `json:"businessType"`
+	ListingType  string `json:"listingType"`
+	Origin       string `json:"origin"`
+}
 
 type Local struct {
 	City         string `json:"city"`
@@ -18,14 +23,7 @@ type Local struct {
 	StateAcronym string `json:"stateAcronym"`
 }
 
-type Location struct {
-	Local        Local  `json:"local"`
-	BusinessType string `json:"businessType"`
-	ListingType  string `json:"listingType"`
-	Origin       string `json:"origin"`
-}
-
-func (l *Location) Validation() []error {
+func (l *SearchConfig) Validation() []error {
 	var errs []error
 	var err error
 
@@ -70,13 +68,13 @@ func (l *Location) Validation() []error {
 	}
 
 	// Valida Origem
-	configSites := viper.GetStringMapString("sites")
-	sites := GetKeys(configSites)
+	// configSites := viper.GetStringMapString("sites")
+	// sites := utils.GetKeys(configSites)
 
-	if !Contains(sites, l.Origin) {
-		err = fmt.Errorf("sites need a %v but received '%s'", sites, l.Origin)
-		errs = append(errs, err)
-	}
+	// if !utils.Contains(sites, l.Origin) {
+	// 	err = fmt.Errorf("sites need a %v but received '%s'", sites, l.Origin)
+	// 	errs = append(errs, err)
+	// }
 
 	if errs != nil {
 		return errs

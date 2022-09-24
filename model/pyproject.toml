@@ -3,6 +3,9 @@ name = "model"
 version = "0.1.0"
 description = ""
 authors = ["Douglas Braga <30268535+dobraga@users.noreply.github.com>"]
+packages = [
+    { include = "model", from = "./" },
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -11,12 +14,17 @@ SQLAlchemy = "^1.4.36"
 python-dotenv = "^0.20.0"
 psycopg2-binary = "^2.9.3"
 pandas = "^1.4.2"
+dynaconf = "^3.1.11"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
 ipykernel = "^6.13.0"
 mypy = "^0.950"
 black = "^22.3.0"
+seaborn = "^0.12.0"
+plotly = "^5.10.0"
+nbformat = "^5.6.0"
+nbclient = "^0.6.8"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

@@ -4,3 +4,8 @@ go_listings
 *.db
 *.pyc
 .vscode/
+*.log
+*.html
+*.js
+*.css
+*.woff

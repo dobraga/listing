@@ -1,7 +1,8 @@
-package main
+package property
 
 import (
 	"encoding/json"
+	"fetch/utils"
 	"fmt"
 	"strconv"
 	"strings"
@@ -10,23 +11,101 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type Station struct {
-	Name     string
-	Uf       string `gorm:"primaryKey"`
-	Linha    string `gorm:"primaryKey"`
-	Station  string `gorm:"primaryKey"`
-	Lat      float64
-	Lon      float64
-	Url      string
-	URLLinha string
-}
+func UnmarshalProperty(bytesData []byte, l SearchConfig) ([]Property, error) {
+	var listNestedProperty []NestedProperty
+	var listProperty []Property
+	medias := []string{}
 
-type PageStation struct {
-	Uf       string
-	Title    string
-	Linha    string
-	Url      string
-	URLLinha string
+	// Bytes to map of interfaces
+	data := map[string]interface{}{}
+	err := json.Unmarshal(bytesData, &data)
+	if err != nil {
+		err = fmt.Errorf("erro no parse dos dados '%v': %v", bytesData, err)
+		log.Error(err)
+	}
+
+	// Interface to map and get listings
+	data = data["search"].(map[string]interface{})
+	data = data["result"].(map[string]interface{})
+	listingsPage := data["listings"].([]interface{})
+
+	// Slice of listings to Struct
+	jsonBytes, err := json.Marshal(listingsPage)
+	if err != nil {
+		err = fmt.Errorf("erro na transformação para binário '%v': %v", listingsPage, err)
+		log.Error(err)
+		return listProperty, err
+		// os.WriteFile("test.json", jsonBytes, 0666)
+	}
+
+	err = json.Unmarshal(jsonBytes, &listNestedProperty)
+	if err != nil {
+		err = fmt.Errorf("erro na transformação para struct: %v", err)
+		log.Error(err)
+		return listProperty, err
+	}
+
+	// Unnest struct
+	for _, nestedProperty := range listNestedProperty {
+		log.Debugf("Processing: '%s'", nestedProperty.Link.Href)
+
+		var property Property
+
+		for _, media := range nestedProperty.Medias {
+			medias = append(medias, media.Url)
+		}
+
+		media := strings.Join(medias, "|")
+		amenities := strings.Join(nestedProperty.Listing.Amenities, "|")
+
+		for _, PricingInfos := range nestedProperty.Listing.PricingInfos {
+			if PricingInfos.BusinessType == l.BusinessType {
+				price, err := strconv.ParseFloat(PricingInfos.Price, 32)
+				if err != nil {
+					err = fmt.Errorf("erro na transformação do valor '%s' para float: %v", PricingInfos.Price, err)
+					log.Error(err)
+					return listProperty, err
+				}
+
+				monthlyCondoFee, _ := strconv.ParseFloat(PricingInfos.MonthlyCondoFee, 32)
+
+				strUsableArea := utils.GetFirst(nestedProperty.Listing.UsableAreas, property.Url, "UsableAreas")
+				usableArea, _ := strconv.Atoi(strUsableArea)
+
+				property.Origin = l.Origin
+				property.Url = nestedProperty.Link.Href
+				property.Neighborhood = l.Local.Neighborhood
+				property.State = l.Local.State
+				property.StateAcronym = l.Local.StateAcronym
+				property.City = l.Local.City
+				property.Zone = l.Local.Zone
+				property.BusinessType = l.BusinessType
+				property.ListingType = nestedProperty.Listing.ListingType
+				property.Title = nestedProperty.Listing.Title
+				property.UsableArea = usableArea
+				property.Floors = utils.GetFirst(nestedProperty.Listing.Floors, property.Url, "Floors")
+				property.UnitTypes = utils.GetFirst(nestedProperty.Listing.UnitTypes, property.Url, "UnitTypes")
+				property.Bedrooms = utils.GetFirst(nestedProperty.Listing.Bedrooms, property.Url, "Bedrooms")
+				property.Bathrooms = utils.GetFirst(nestedProperty.Listing.Bathrooms, property.Url, "Bathrooms")
+				property.Suites = utils.GetFirst(nestedProperty.Listing.Suites, property.Url, "Suites")
+				property.ParkingSpaces = utils.GetFirst(nestedProperty.Listing.ParkingSpaces, property.Url, "ParkingSpaces")
+				property.Amenities = amenities
+				property.Lat = float64(nestedProperty.Listing.Address.Point.Lat)
+				property.Lon = float64(nestedProperty.Listing.Address.Point.Lon)
+				property.Price = price
+				property.CondoFee = monthlyCondoFee
+				property.CreatedDate = nestedProperty.Listing.CreatedAt
+				property.UpdatedDate = nestedProperty.Listing.UpdatedAt
+				property.Images = media
+
+				listProperty = append(listProperty, property)
+			}
+		}
+
+		log.Debugf("Processed: '%s'", nestedProperty.Link.Href)
+	}
+
+	return listProperty, nil
 }
 
 type Property struct {
@@ -55,93 +134,6 @@ type Property struct {
 	CreatedDate   time.Time
 	UpdatedDate   time.Time
 	Images        string
-}
-
-func (p *Property) Unmarshal(bytesData []byte, l Location) ([]Property, error) {
-	var listNestedProperty []NestedProperty
-	var listProperty []Property
-	medias := []string{}
-
-	// Bytes to map of interfaces
-	data := map[string]interface{}{}
-	err := json.Unmarshal(bytesData, &data)
-	if err != nil {
-		log.Error(fmt.Sprintf("Erro no parse dos dados '%v': %v", bytesData, err))
-	}
-
-	// Interface to map and get listings
-	data = data["search"].(map[string]interface{})
-	data = data["result"].(map[string]interface{})
-	listingsPage := data["listings"].([]interface{})
-
-	// Slice of listings to Struct
-	jsonBytes, err := json.Marshal(listingsPage)
-	if err != nil {
-		log.Error(fmt.Sprintf("Erro na transformação para binário '%v': %v", listingsPage, err))
-		// os.WriteFile("test.json", jsonBytes, 0666)
-	}
-
-	err = json.Unmarshal(jsonBytes, &listNestedProperty)
-	if err != nil {
-		log.Error(fmt.Sprintf("Erro na transformação para struct: %v", err))
-	}
-
-	// Unnest struct
-	for _, nestedProperty := range listNestedProperty {
-		var property Property
-
-		for _, media := range nestedProperty.Medias {
-			medias = append(medias, media.Url)
-		}
-
-		media := strings.Join(medias, "|")
-		amenities := strings.Join(nestedProperty.Listing.Amenities, "|")
-
-		for _, PricingInfos := range nestedProperty.Listing.PricingInfos {
-			if PricingInfos.BusinessType == l.BusinessType {
-				price, err := strconv.ParseFloat(PricingInfos.Price, 32)
-				if err != nil {
-					log.Error(fmt.Sprintf("Erro na transformação do valor '%s' para float: %v", PricingInfos.Price, err))
-				}
-
-				monthlyCondoFee, _ := strconv.ParseFloat(PricingInfos.MonthlyCondoFee, 32)
-
-				strUsableArea := GetFirst(nestedProperty.Listing.UsableAreas, property.Url, "UsableAreas")
-				usableArea, _ := strconv.Atoi(strUsableArea)
-
-				property.Origin = l.Origin
-				property.Url = nestedProperty.Link.Href
-				property.Neighborhood = l.Local.Neighborhood
-				property.State = l.Local.State
-				property.StateAcronym = l.Local.StateAcronym
-				property.City = l.Local.City
-				property.Zone = l.Local.Zone
-				property.BusinessType = l.BusinessType
-				property.ListingType = nestedProperty.Listing.ListingType
-				property.Title = nestedProperty.Listing.Title
-				property.UsableArea = usableArea
-				property.Floors = GetFirst(nestedProperty.Listing.Floors, property.Url, "Floors")
-				property.UnitTypes = GetFirst(nestedProperty.Listing.UnitTypes, property.Url, "UnitTypes")
-				property.Bedrooms = GetFirst(nestedProperty.Listing.Bedrooms, property.Url, "Bedrooms")
-				property.Bathrooms = GetFirst(nestedProperty.Listing.Bathrooms, property.Url, "Bathrooms")
-				property.Suites = GetFirst(nestedProperty.Listing.Suites, property.Url, "Suites")
-				property.ParkingSpaces = GetFirst(nestedProperty.Listing.ParkingSpaces, property.Url, "ParkingSpaces")
-				property.Amenities = amenities
-				property.Lat = float64(nestedProperty.Listing.Address.Point.Lat)
-				property.Lon = float64(nestedProperty.Listing.Address.Point.Lon)
-				property.Price = price
-				property.CondoFee = monthlyCondoFee
-				property.CreatedDate = nestedProperty.Listing.CreatedAt
-				property.UpdatedDate = nestedProperty.Listing.UpdatedAt
-				property.Images = media
-
-				listProperty = append(listProperty, property)
-			}
-		}
-
-	}
-
-	return listProperty, nil
 }
 
 type NestedProperty struct {

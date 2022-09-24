@@ -1,4 +1,4 @@
-package main
+package database
 
 import (
 	"fmt"
@@ -15,8 +15,9 @@ func Connect() *gorm.DB {
 	var db *gorm.DB
 	var err error
 
-	if viper.GetString("ENV") == "DEVELOPMENT" {
-		db, err = gorm.Open(sqlite.Open("../test.db"), &gorm.Config{})
+	if viper.GetString("DEVELOPMENT_DATABASE") != "postgres" {
+		dsn := sqlite.Open("../test.db")
+		db, err = gorm.Open(dsn, &gorm.Config{})
 	} else {
 		dsn := fmt.Sprintf(
 			"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=America/Sao_Paulo",
@@ -32,9 +33,6 @@ func Connect() *gorm.DB {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	db.AutoMigrate(&Station{})
-	db.AutoMigrate(&Property{})
 
 	return db
 }

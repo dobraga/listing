@@ -1,8 +1,8 @@
 import requests
 import pandas as pd
 from math import ceil
-from os import environ
 from dash import html, dcc, Dash
+from dynaconf import LazySettings
 from sqlalchemy import create_engine
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
@@ -143,7 +143,7 @@ layout = html.Div(
 )
 
 
-def init_app(app: Dash) -> Dash:
+def init_app(app: Dash, settings: LazySettings) -> Dash:
     @app.callback(
         Output("sidebar", "className"),
         Output("page-content", "className"),
@@ -198,7 +198,7 @@ def init_app(app: Dash) -> Dash:
         if not value:
             raise PreventUpdate
 
-        r = requests.get(f"http://fetch:{environ['PORT']}/locations/{value}")
+        r = requests.get(f"http://{settings['BACKEND_HOST']}:{settings['BACKEND_PORT']}/locations/{value}")
         r.raise_for_status()
 
         locations = r.json()
@@ -239,8 +239,8 @@ def init_app(app: Dash) -> Dash:
             raise PreventUpdate
 
         engine = create_engine(
-            f"postgresql://{environ['POSTGRES_USER']}:{environ['POSTGRES_PASSWORD']}"
-            f"@db:{environ['POSTGRES_PORT']}/{environ['POSTGRES_DB']}"
+            f"postgresql://{settings['POSTGRES_USER']}:{settings['POSTGRES_PASSWORD']}"
+            f"@{settings['POSTGRES_HOST']}:{settings['POSTGRES_PORT']}/{settings['POSTGRES_DB']}"
         )
 
         selected_location = [l for l in locations if l["locationId"] == value][0]
@@ -252,7 +252,7 @@ def init_app(app: Dash) -> Dash:
         listing_type = listing_type[0]["value"]
 
         url = (
-            f"http://fetch:{environ['PORT']}/listings/{business_type}/{listing_type}/"
+            f"http://{settings['BACKEND_HOST']}:{settings['BACKEND_PORT']}/listings/{business_type}/{listing_type}/"
             "{}/{}/{}/{}/{}/{}".format(
                 selected_location["city"],
                 selected_location["locationId"],
@@ -266,8 +266,7 @@ def init_app(app: Dash) -> Dash:
         r = requests.get(url)
         r.raise_for_status()
 
-        df = pd.read_sql_query(
-            f"""
+        query = f"""
         SELECT *, (price + condo_fee) as total_fee
         FROM properties
         WHERE
@@ -278,9 +277,10 @@ def init_app(app: Dash) -> Dash:
             AND state = '{selected_location['state']}'
             AND state_acronym = '{selected_location['stateAcronym']}'
             AND zone = '{selected_location['zone']}'
-        """,
-            engine,
-        )
+        """
+        df = pd.read_sql_query(query, engine)
+        if df.empty:
+            return {}, True, [0] * 12
 
         return (
             df.to_dict("records"),
