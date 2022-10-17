@@ -2,18 +2,18 @@ package property
 
 import (
 	"encoding/json"
+	"fetch/models"
 	"fetch/utils"
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func UnmarshalProperty(bytesData []byte, l SearchConfig) ([]Property, error) {
-	var listNestedProperty []NestedProperty
-	var listProperty []Property
+func UnmarshalProperty(bytesData []byte, l models.SearchConfig) ([]models.Property, error) {
+	var listNestedProperty []models.NestedProperty
+	var listProperty []models.Property
 	medias := []string{}
 
 	// Bytes to map of interfaces
@@ -49,7 +49,7 @@ func UnmarshalProperty(bytesData []byte, l SearchConfig) ([]Property, error) {
 	for _, nestedProperty := range listNestedProperty {
 		log.Debugf("Processing: '%s'", nestedProperty.Link.Href)
 
-		var property Property
+		var property models.Property
 
 		for _, media := range nestedProperty.Medias {
 			medias = append(medias, media.Url)
@@ -97,6 +97,7 @@ func UnmarshalProperty(bytesData []byte, l SearchConfig) ([]Property, error) {
 				property.CreatedDate = nestedProperty.Listing.CreatedAt
 				property.UpdatedDate = nestedProperty.Listing.UpdatedAt
 				property.Images = media
+				property.Active = true
 
 				listProperty = append(listProperty, property)
 			}
@@ -106,95 +107,4 @@ func UnmarshalProperty(bytesData []byte, l SearchConfig) ([]Property, error) {
 	}
 
 	return listProperty, nil
-}
-
-type Property struct {
-	Origin        string `gorm:"primaryKey"`
-	Url           string `gorm:"primaryKey"`
-	Neighborhood  string
-	State         string
-	StateAcronym  string
-	City          string
-	Zone          string
-	BusinessType  string `gorm:"primaryKey"`
-	ListingType   string
-	Title         string
-	UsableArea    int
-	Floors        int
-	UnitTypes     string
-	Bedrooms      int
-	Bathrooms     int
-	Suites        int
-	ParkingSpaces int
-	Amenities     string
-	Lat           float64
-	Lon           float64
-	Price         float64
-	CondoFee      float64
-	CreatedDate   time.Time
-	UpdatedDate   time.Time
-	Images        string
-}
-
-type NestedProperty struct {
-	Listing Listing `json:"listing"`
-	Medias  []Media `json:"medias"`
-	Link    Link    `json:"link"`
-}
-
-type Media struct {
-	Url string `json:"url"`
-}
-
-type Link struct {
-	Href string `json:"href"`
-}
-
-type Listing struct {
-	Id              string    `json:"id"`
-	Title           string    `json:"title"`
-	UsableAreas     []string  `json:"usableAreas"`
-	Address         Address   `json:"address"`
-	Amenities       []string  `json:"amenities"`
-	Bathrooms       []int     `json:"bathrooms"`
-	Bedrooms        []int     `json:"bedrooms"`
-	Suites          []int     `json:"suites"`
-	Description     string    `json:"description"`
-	Floors          []int     `json:"floors"`
-	ListingType     string    `json:"listingType"`
-	UsageTypes      []string  `json:"usageTypes"`
-	ParkingSpaces   []int     `json:"parkingSpaces"`
-	Portal          string    `json:"portal"`
-	PricingInfos    []Pricing `json:"pricingInfos"`
-	PropertyType    string    `json:"propertyType"`
-	PublicationType string    `json:"publicationType"`
-	UnitTypes       []string  `json:"unitTypes"`
-	UnitsOnTheFloor int       `json:"unitsOnTheFloor"`
-	CreatedAt       time.Time `json:"createdAt"`
-	UpdatedAt       time.Time `json:"updatedAt"`
-}
-
-type Address struct {
-	City         string  `json:"city"`
-	Complement   string  `json:"complement"`
-	LocationId   string  `json:"locationId"`
-	Neighborhood string  `json:"neighborhood"`
-	Point        LatLong `json:"point"`
-	State        string  `json:"state"`
-	StateAcronym string  `json:"stateAcronym"`
-	StreetNumber string  `json:"streetNumber"`
-	ZipCode      string  `json:"zipCode"`
-	Zone         string  `json:"zone"`
-}
-
-type LatLong struct {
-	Lat float32 `json:"lat"`
-	Lon float32 `json:"lon"`
-}
-
-type Pricing struct {
-	BusinessType    string `json:"businessType"`
-	MonthlyCondoFee string `json:"monthlyCondoFee"`
-	Price           string `json:"price"`
-	YearlyIptu      string `json:"yearlyIptu"`
 }

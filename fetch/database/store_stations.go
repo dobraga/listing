@@ -1,0 +1,12 @@
+package database
+
+import (
+	"fetch/models"
+
+	"gorm.io/gorm/clause"
+)
+
+func StoreStations(stations []models.Station) error {
+	db := Connect()
+	return db.Clauses(clause.OnConflict{UpdateAll: true}).CreateInBatches(stations, 500).Error
+}

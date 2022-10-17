@@ -34,10 +34,13 @@ def init_app(app: Dash) -> Dash:
         if not data:
             raise PreventUpdate
 
-        df = pd.DataFrame(data)
+        df = pd.DataFrame(data).query("lat != 0 or lon != 0")
         total = df.shape[0]
-        qtd_sem_latlon = (df[["lat", "lon"]].max(axis=1) != 0).sum()
-        df = df.query("lat != 0 or lon != 0").head(N)
+        if total > N:
+            df = df.head(N)
+            msg = f"Exibindo {N} imoveis do total de {total} imóveis"
+        else:
+            msg = f"Exibindo {total} imóveis"
 
         map = Map(
             location=df[["lat", "lon"]].mean().values,
@@ -54,9 +57,6 @@ def init_app(app: Dash) -> Dash:
                 popup=box(**row),
             ).add_to(marker_cluster)
 
-        return (
-            f"Exibindo {N} imoveis do total de {total} imóveis sendo {qtd_sem_latlon} sem latitude ou longitude",
-            map._repr_html_(),
-        )
+        return msg, map._repr_html_()
 
     return app

@@ -3,14 +3,15 @@ package property
 import (
 	"encoding/json"
 	"errors"
+	"fetch/models"
 	"fmt"
 
 	"github.com/spf13/viper"
 )
 
-func ListLocations(local string, origin string) ([]Local, error) {
-	mapLocations := map[string]Local{}
-	finalLocations := []Local{}
+func ListLocations(local string, origin string) ([]models.Local, error) {
+	mapLocations := map[string]models.Local{}
+	finalLocations := []models.Local{}
 
 	sites := viper.Get("sites")
 	if sites == nil {
@@ -44,7 +45,7 @@ func ListLocations(local string, origin string) ([]Local, error) {
 		address := location.(map[string]interface{})["address"].(map[string]interface{})
 		locationId := address["locationId"].(string)
 
-		sLocation := Local{
+		sLocation := models.Local{
 			City:         address["city"].(string),
 			Zone:         address["zone"].(string),
 			State:        address["state"].(string),

@@ -1,18 +1,17 @@
 package database
 
 import (
-	"fetch/property"
-	"fetch/station"
-
-	"gorm.io/gorm"
+	"fetch/models"
 )
 
-func AutoMigrate(DB *gorm.DB) {
-	err := DB.AutoMigrate(&property.Property{})
+func AutoMigrate() {
+	DB := Connect()
+
+	err := DB.AutoMigrate(&models.Property{})
 	if err != nil {
 		panic(err)
 	}
-	err = DB.AutoMigrate(&station.Station{})
+	err = DB.AutoMigrate(&models.Station{})
 	if err != nil {
 		panic(err)
 	}

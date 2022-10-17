@@ -2,23 +2,23 @@ package property
 
 import (
 	"encoding/json"
+	"fetch/database"
+	"fetch/models"
 	"fetch/utils"
 	"fmt"
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
-func FetchProperties(db *gorm.DB, config SearchConfig, maxPage int) []error {
-	var properties []Property
+func FetchProperties(config models.SearchConfig, maxPage int) error {
+	var properties []models.Property
 	size := 24
 	query := createQuery(config, size)
 
 	qtdListings, err := qtdListings(config, query)
 	if err != nil {
-		return []error{err}
+		return err
 	}
 	total_pages := int(qtdListings / size)
 	if maxPage < 0 {
@@ -53,17 +53,10 @@ func FetchProperties(db *gorm.DB, config SearchConfig, maxPage int) []error {
 		}
 	}
 
-	log.Infof("Inserting %d properties from '%s' to database", len(properties), config.Origin)
-	result := db.Clauses(clause.OnConflict{UpdateAll: true}).CreateInBatches(properties, 500)
-	if result.Error != nil {
-		return []error{result.Error}
-	}
-
-	log.Infof("Saved %d pages from '%s'", maxPage, config.Origin)
-	return nil
+	return database.StoreProperty(config, properties)
 }
 
-func qtdListings(config SearchConfig, query map[string]interface{}) (int, error) {
+func qtdListings(config models.SearchConfig, query map[string]interface{}) (int, error) {
 	bytesData, err := MakeRequest(false, config.Origin, query)
 	if err != nil {
 		log.Error(err)
@@ -92,7 +85,7 @@ func qtdListings(config SearchConfig, query map[string]interface{}) (int, error)
 	return int(qtd.(float64)), nil
 }
 
-func createQuery(config SearchConfig, size int) map[string]interface{} {
+func createQuery(config models.SearchConfig, size int) map[string]interface{} {
 	return map[string]interface{}{
 		"includeFields":       "search(result(listings(listing(displayAddressType,amenities,usableAreas,constructionStatus,listingType,description,title,stamps,createdAt,floors,unitTypes,nonActivationReason,providerId,propertyType,unitSubTypes,unitsOnTheFloor,legacyId,id,portal,unitFloor,parkingSpaces,updatedAt,address,suites,publicationType,externalId,bathrooms,usageTypes,totalAreas,advertiserId,advertiserContact,whatsappNumber,bedrooms,acceptExchange,pricingInfos,showPrice,resale,buildings,capacityLimit,status),account(id,name,logoUrl,licenseNumber,showAddress,legacyVivarealId,legacyZapId,minisite),medias,accountLink,link)),totalCount),expansion(search(result(listings(listing(displayAddressType,amenities,usableAreas,constructionStatus,listingType,description,title,stamps,createdAt,floors,unitTypes,nonActivationReason,providerId,propertyType,unitSubTypes,unitsOnTheFloor,legacyId,id,portal,unitFloor,parkingSpaces,updatedAt,address,suites,publicationType,externalId,bathrooms,usageTypes,totalAreas,advertiserId,advertiserContact,whatsappNumber,bedrooms,acceptExchange,pricingInfos,showPrice,resale,buildings,capacityLimit,status),account(id,name,logoUrl,licenseNumber,showAddress,legacyVivarealId,legacyZapId,minisite),medias,accountLink,link)),totalCount)),nearby(search(result(listings(listing(displayAddressType,amenities,usableAreas,constructionStatus,listingType,description,title,stamps,createdAt,floors,unitTypes,nonActivationReason,providerId,propertyType,unitSubTypes,unitsOnTheFloor,legacyId,id,portal,unitFloor,parkingSpaces,updatedAt,address,suites,publicationType,externalId,bathrooms,usageTypes,totalAreas,advertiserId,advertiserContact,whatsappNumber,bedrooms,acceptExchange,pricingInfos,showPrice,resale,buildings,capacityLimit,status),account(id,name,logoUrl,licenseNumber,showAddress,legacyVivarealId,legacyZapId,minisite),medias,accountLink,link)),totalCount)),page,fullUriFragments,developments(search(result(listings(listing(displayAddressType,amenities,usableAreas,constructionStatus,listingType,description,title,stamps,createdAt,floors,unitTypes,nonActivationReason,providerId,propertyType,unitSubTypes,unitsOnTheFloor,legacyId,id,portal,unitFloor,parkingSpaces,updatedAt,address,suites,publicationType,externalId,bathrooms,usageTypes,totalAreas,advertiserId,advertiserContact,whatsappNumber,bedrooms,acceptExchange,pricingInfos,showPrice,resale,buildings,capacityLimit,status),account(id,name,logoUrl,licenseNumber,showAddress,legacyVivarealId,legacyZapId,minisite),medias,accountLink,link)),totalCount)),superPremium(search(result(listings(listing(displayAddressType,amenities,usableAreas,constructionStatus,listingType,description,title,stamps,createdAt,floors,unitTypes,nonActivationReason,providerId,propertyType,unitSubTypes,unitsOnTheFloor,legacyId,id,portal,unitFloor,parkingSpaces,updatedAt,address,suites,publicationType,externalId,bathrooms,usageTypes,totalAreas,advertiserId,advertiserContact,whatsappNumber,bedrooms,acceptExchange,pricingInfos,showPrice,resale,buildings,capacityLimit,status),account(id,name,logoUrl,licenseNumber,showAddress,legacyVivarealId,legacyZapId,minisite),medias,accountLink,link)),totalCount)),owners(search(result(listings(listing(displayAddressType,amenities,usableAreas,constructionStatus,listingType,description,title,stamps,createdAt,floors,unitTypes,nonActivationReason,providerId,propertyType,unitSubTypes,unitsOnTheFloor,legacyId,id,portal,unitFloor,parkingSpaces,updatedAt,address,suites,publicationType,externalId,bathrooms,usageTypes,totalAreas,advertiserId,advertiserContact,whatsappNumber,bedrooms,acceptExchange,pricingInfos,showPrice,resale,buildings,capacityLimit,status),account(id,name,logoUrl,licenseNumber,showAddress,legacyVivarealId,legacyZapId,minisite),medias,accountLink,link)),totalCount))",
 		"addressNeighborhood": config.Local.Neighborhood,

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fetch/database"
+	"fetch/models"
 	"fetch/property"
 	"fetch/utils"
 	"testing"
@@ -11,11 +11,10 @@ import (
 
 func TestFetchProperties(t *testing.T) {
 	utils.LoadSettings()
-	DB := database.Connect()
 	logrus.SetLevel(logrus.DebugLevel)
 
-	location := property.SearchConfig{
-		Local: property.Local{
+	location := models.SearchConfig{
+		Local: models.Local{
 			City:         "Rio de Janeiro",
 			Zone:         "Zona Norte",
 			State:        "Rio de Janeiro",
@@ -33,7 +32,7 @@ func TestFetchProperties(t *testing.T) {
 		return
 	}
 
-	errs := property.FetchProperties(DB, location, 0)
+	errs := property.FetchProperties(location, 0)
 	if errs != nil {
 		t.Errorf("%v", errs)
 		return

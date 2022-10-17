@@ -2,23 +2,22 @@ package main
 
 import (
 	"fetch/database"
+	"fetch/models"
 	"fetch/property"
 	"fetch/station"
 	"fetch/utils"
-	"fmt"
+	"net/http"
 	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
-	"gorm.io/gorm"
 )
 
 func main() {
 	utils.LoadSettings()
-	DB := database.Connect()
-	database.AutoMigrate(DB)
+	database.AutoMigrate()
 
-	err := station.CheckExistsExtractCreate(DB)
+	err := station.CheckExistsExtractCreate()
 	if err != nil {
 		panic(err)
 	}
@@ -27,6 +26,12 @@ func main() {
 	todosSites := utils.GetKeys(mapSites)
 
 	r := gin.Default()
+
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "pong",
+		})
+	})
 
 	r.GET("/locations/:location", func(c *gin.Context) {
 		location := c.Param("location")
@@ -43,53 +48,47 @@ func main() {
 
 	r.GET("listings/:business_type/:listing_type/:city/:locationId/:neighborhood/:state/:stateAcronym/:zone", func(c *gin.Context) {
 		wg := new(sync.WaitGroup)
-		channelErr := make(chan []error)
+		channelErr := make(chan error)
 
-		location := property.SearchConfig{
-			Local: property.Local{
-				City:         c.Param("city"),
-				Zone:         c.Param("zone"),
-				State:        c.Param("state"),
-				LocationId:   c.Param("locationId"),
-				Neighborhood: c.Param("neighborhood"),
-				StateAcronym: c.Param("stateAcronym"),
-			},
-			BusinessType: c.Param("business_type"),
-			ListingType:  c.Param("listing_type"),
-			Origin:       "",
-		}
-
+		location := models.SearchConfig{}
+		location.ExtractFromContext(c)
 		errs := location.Validation()
 		if len(errs) > 0 {
-			c.JSON(400, fmt.Sprintf("%v", errs))
+			c.JSON(400, errs)
+			return
+		}
+
+		err = database.ResetActive(location)
+		if err != nil {
+			c.JSON(400, err)
 			return
 		}
 
 		for _, origin := range todosSites {
 			wg.Add(1)
 
-			go func(o string, c *gin.Context, d *gorm.DB) {
+			go func(o string, c *gin.Context) {
 				defer wg.Done()
 
 				l := location
 				l.Origin = o
 
-				err := property.FetchProperties(DB, l, viper.GetInt("max_page"))
+				err := property.FetchProperties(l, viper.GetInt("max_page"))
 				if err != nil {
 					channelErr <- err
 				}
-			}(origin, c, DB)
+			}(origin, c)
 		}
 
 		wg.Wait()
 		close(channelErr)
 
 		for err := range channelErr {
-			errs = append(errs, err...)
+			errs = append(errs, err)
 		}
 
 		if errs != nil {
-			c.JSON(400, fmt.Sprintf("%v", errs))
+			c.JSON(400, errs)
 			return
 		} else {
 			c.JSON(200, "Saved successfully")

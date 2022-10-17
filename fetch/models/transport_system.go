@@ -1,4 +1,4 @@
-package station
+package models
 
 import (
 	"github.com/antchfx/htmlquery"

@@ -1,12 +1,14 @@
 package station
 
 import (
+	"fetch/models"
+
 	"github.com/sirupsen/logrus"
 )
 
-func FetchStations(transports_systems []TransportSystem) ([]Station, []error) {
-	var stations []Station
-	var lines []Line
+func FetchStations(transports_systems []models.TransportSystem) ([]models.Station, []error) {
+	var stations []models.Station
+	var lines []models.Line
 	var errs []error
 
 	logrus.Infof("Extracting %d transports systems", len(transports_systems))

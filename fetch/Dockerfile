@@ -10,6 +10,7 @@ RUN go mod download
 
 COPY ./*.go ./
 COPY database/ ./database
+COPY models/ ./models
 COPY property/ ./property
 COPY station/ ./station
 COPY utils/ ./utils

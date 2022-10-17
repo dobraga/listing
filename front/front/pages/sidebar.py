@@ -198,7 +198,9 @@ def init_app(app: Dash, settings: LazySettings) -> Dash:
         if not value:
             raise PreventUpdate
 
-        r = requests.get(f"http://{settings['BACKEND_HOST']}:{settings['BACKEND_PORT']}/locations/{value}")
+        r = requests.get(
+            f"http://{settings['BACKEND_HOST']}:{settings['BACKEND_PORT']}/locations/{value}"
+        )
         r.raise_for_status()
 
         locations = r.json()
@@ -277,6 +279,7 @@ def init_app(app: Dash, settings: LazySettings) -> Dash:
             AND state = '{selected_location['state']}'
             AND state_acronym = '{selected_location['stateAcronym']}'
             AND zone = '{selected_location['zone']}'
+            AND active
         """
         df = pd.read_sql_query(query, engine)
         if df.empty:

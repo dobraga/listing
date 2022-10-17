@@ -1,7 +1,9 @@
-package property
+package models
 
 import (
 	"fmt"
+
+	"github.com/gin-gonic/gin"
 )
 
 var businessTypeValues = map[string]bool{"RENTAL": true, "SALE": true}
@@ -14,13 +16,17 @@ type SearchConfig struct {
 	Origin       string `json:"origin"`
 }
 
-type Local struct {
-	City         string `json:"city"`
-	Zone         string `json:"zone"`
-	State        string `json:"state"`
-	LocationId   string `json:"locationId"`
-	Neighborhood string `json:"neighborhood"`
-	StateAcronym string `json:"stateAcronym"`
+func (s *SearchConfig) ExtractFromContext(c *gin.Context) {
+	s.Local = Local{
+		City:         c.Param("city"),
+		Zone:         c.Param("zone"),
+		State:        c.Param("state"),
+		LocationId:   c.Param("locationId"),
+		Neighborhood: c.Param("neighborhood"),
+		StateAcronym: c.Param("stateAcronym"),
+	}
+	s.BusinessType = c.Param("business_type")
+	s.ListingType = c.Param("listing_type")
 }
 
 func (l *SearchConfig) Validation() []error {
@@ -81,4 +87,13 @@ func (l *SearchConfig) Validation() []error {
 	}
 
 	return nil
+}
+
+type Local struct {
+	City         string `json:"city"`
+	Zone         string `json:"zone"`
+	State        string `json:"state"`
+	LocationId   string `json:"locationId"`
+	Neighborhood string `json:"neighborhood"`
+	StateAcronym string `json:"stateAcronym"`
 }

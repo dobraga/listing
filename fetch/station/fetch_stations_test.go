@@ -1,12 +1,13 @@
 package station
 
 import (
+	"fetch/models"
 	"fmt"
 	"testing"
 )
 
 func TestFetchStations(t *testing.T) {
-	transports_systems := []TransportSystem{
+	transports_systems := []models.TransportSystem{
 		{URL: "https://pt.wikipedia.org/wiki/Metr%C3%B4_do_Rio_de_Janeiro", Uf: "RJ"},
 	}
 
