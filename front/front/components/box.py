@@ -60,8 +60,6 @@ def box(**kwargs) -> str:
     else:
         images = "https://img2.gratispng.com/20180407/yhw/kisspng-empty-set-null-set-symbol-mathematics-forbidden-5ac859ad09c119.24223671152307959704.jpg"
 
-    # <div title="{address}" style = "{style_text}"> {address} </div>
-
     return """
     <div style="width: 40vw; height: 20vh;">
         <div style="{style_left}">

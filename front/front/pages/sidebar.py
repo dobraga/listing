@@ -1,14 +1,15 @@
-import requests
-import pandas as pd
 from math import ceil
-from dash import html, dcc, Dash
+
+import dash_bootstrap_components as dbc
+import pandas as pd
+import requests
+from dash import Dash, dcc, html
+from dash.dependencies import Input, Output, State
+from dash.exceptions import PreventUpdate
 from dynaconf import LazySettings
 from sqlalchemy import create_engine
-import dash_bootstrap_components as dbc
-from dash.exceptions import PreventUpdate
-from dash.dependencies import Input, Output, State
 
-from front.pages import table, map
+from front.pages import map, table
 
 depara_tp_contrato = [
     {"label": "Aluguel", "value": "RENTAL"},
@@ -245,12 +246,15 @@ def init_app(app: Dash, settings: LazySettings) -> Dash:
             f"@{settings['POSTGRES_HOST']}:{settings['POSTGRES_PORT']}/{settings['POSTGRES_DB']}"
         )
 
-        selected_location = [l for l in locations if l["locationId"] == value][0]
+        selected_location = [
+            l for l in locations if l["locationId"] == value][0]
 
-        business_type = [o for o in depara_tp_contrato if o["value"] == business_value]
+        business_type = [
+            o for o in depara_tp_contrato if o["value"] == business_value]
         business_type = business_type[0]["value"]
 
-        listing_type = [o for o in depara_tp_listings if o["value"] == listing_value]
+        listing_type = [
+            o for o in depara_tp_listings if o["value"] == listing_value]
         listing_type = listing_type[0]["value"]
 
         url = (
