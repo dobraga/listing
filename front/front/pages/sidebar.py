@@ -6,7 +6,6 @@ import requests
 from dash import Dash, dcc, html
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-from dynaconf import LazySettings
 from sqlalchemy import create_engine
 
 from front.pages import map, table
@@ -144,7 +143,7 @@ layout = html.Div(
 )
 
 
-def init_app(app: Dash, settings: LazySettings) -> Dash:
+def init_app(app: Dash, settings: dict) -> Dash:
     @app.callback(
         Output("sidebar", "className"),
         Output("page-content", "className"),

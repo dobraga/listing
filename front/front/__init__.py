@@ -3,7 +3,7 @@ import dash_bootstrap_components as dbc
 
 
 from front import pages
-from .settings import settings
+from front.settings import init
 
 
 def create_app() -> Dash:
@@ -12,7 +12,7 @@ def create_app() -> Dash:
         external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.FONT_AWESOME],
         suppress_callback_exceptions=True,
     )
-
+    settings = init()
     dash = pages.init_app(dash, settings)
 
     return dash

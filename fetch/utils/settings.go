@@ -10,7 +10,14 @@ import (
 	"github.com/spf13/viper"
 )
 
+var envVariables = []string{"DEBUG", "max_page", "force_update", "POSTGRES_HOST"}
+var postgresVariables = []string{"POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_DB", "POSTGRES_PORT"}
+
 func LoadSettings() {
+	if _, err := os.Stat(".env"); err != nil {
+		os.Chdir("../")
+	}
+
 	log.Debug("Loading .env")
 	viper.SetConfigFile(".env")
 	err := viper.ReadInConfig()
@@ -35,11 +42,6 @@ func LoadSettings() {
 		logrus.SetOutput(f)
 		log.SetLevel(log.DebugLevel)
 
-		// use postgres or sqllite
-		if viper.GetString("DEVELOPMENT_DATABASE") == "postgres" {
-			viper.Set("POSTGRES_HOST", "localhost")
-		}
-
 	case "PRODUCTION":
 		gin.SetMode(gin.ReleaseMode)
 		log.SetLevel(log.InfoLevel)
@@ -48,7 +50,7 @@ func LoadSettings() {
 	}
 
 	// Non nullable configs
-	for _, variable := range []string{"POSTGRES_HOST", "POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_DB", "POSTGRES_PORT"} {
+	for _, variable := range postgresVariables {
 		value := viper.Get(variable)
 		if value == nil {
 			panic(fmt.Sprintf("Need '%s' variable in .env file", variable))
@@ -56,7 +58,7 @@ func LoadSettings() {
 	}
 
 	// env configs
-	for _, variable := range []string{"DEBUG", "max_page", "force_update"} {
+	for _, variable := range envVariables {
 		envVariable := fmt.Sprintf("%s_%s", env, variable)
 		value := viper.Get(envVariable)
 		viper.Set(variable, value)

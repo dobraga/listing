@@ -24,8 +24,7 @@ services:
     fetch:
         hostname: fetch
         build:
-            context: ./fetch/
-            dockerfile: Dockerfile
+            dockerfile: ./fetch/Dockerfile
         restart: always
         env_file:
             - ./.env
@@ -39,8 +38,7 @@ services:
 
     front:
         build:
-            context: ./front/
-            dockerfile: Dockerfile
+            dockerfile: ./front/Dockerfile
         restart: always
         env_file:
             - ./.env

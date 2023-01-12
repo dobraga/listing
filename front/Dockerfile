@@ -9,8 +9,8 @@ WORKDIR /app
 
 COPY .env ./
 COPY settings.toml ./
-COPY front/ ./front
-COPY requirements.txt ./
+COPY front/front/ ./front
+COPY front/requirements.txt ./
 
 RUN pip3 install -r requirements.txt
 

@@ -96,6 +96,6 @@ func main() {
 		}
 	})
 
-	port := viper.GetString("PORT")
+	port := viper.GetString("BACKEND_PORT")
 	r.Run(":" + port)
 }
