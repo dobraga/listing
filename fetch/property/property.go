@@ -11,20 +11,15 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func UnmarshalProperty(bytesData []byte, l models.SearchConfig) ([]models.Property, error) {
+func UnmarshalProperty(data map[string]interface{}, l models.SearchConfig) ([]models.Property, error) {
 	var listNestedProperty []models.NestedProperty
 	var listProperty []models.Property
 	medias := []string{}
 
-	// Bytes to map of interfaces
-	data := map[string]interface{}{}
-	err := json.Unmarshal(bytesData, &data)
-	if err != nil {
-		err = fmt.Errorf("erro no parse dos dados '%v': %v", bytesData, err)
-		log.Error(err)
-	}
-
 	// Interface to map and get listings
+	if utils.Contains(utils.GetKeys(data), "nearby") {
+		data = data["nearby"].(map[string]interface{})
+	}
 	data = data["search"].(map[string]interface{})
 	data = data["result"].(map[string]interface{})
 	listingsPage := data["listings"].([]interface{})

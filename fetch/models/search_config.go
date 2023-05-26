@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,13 +18,19 @@ type SearchConfig struct {
 }
 
 func (s *SearchConfig) ExtractFromContext(c *gin.Context) {
+	addressPointLat, _ := strconv.ParseFloat(c.Param("addressPointLat"), 64)
+	addressPointLon, _ := strconv.ParseFloat(c.Param("addressPointLon"), 64)
+
 	s.Local = Local{
-		City:         c.Param("city"),
-		Zone:         c.Param("zone"),
-		State:        c.Param("state"),
-		LocationId:   c.Param("locationId"),
-		Neighborhood: c.Param("neighborhood"),
-		StateAcronym: c.Param("stateAcronym"),
+		City:            c.Param("city"),
+		Zone:            c.Param("zone"),
+		State:           c.Param("state"),
+		LocationId:      c.Param("locationId"),
+		Neighborhood:    c.Param("neighborhood"),
+		StateAcronym:    c.Param("stateAcronym"),
+		AddressStreet:   c.Param("addressStreet"),
+		AddressPointLat: addressPointLat,
+		AddressPointLon: addressPointLon,
 	}
 	s.BusinessType = c.Param("business_type")
 	s.ListingType = c.Param("listing_type")
@@ -90,10 +97,13 @@ func (l *SearchConfig) Validation() []error {
 }
 
 type Local struct {
-	City         string `json:"city"`
-	Zone         string `json:"zone"`
-	State        string `json:"state"`
-	LocationId   string `json:"locationId"`
-	Neighborhood string `json:"neighborhood"`
-	StateAcronym string `json:"stateAcronym"`
+	City            string  `json:"city"`
+	Zone            string  `json:"zone"`
+	State           string  `json:"state"`
+	LocationId      string  `json:"locationId"`
+	Neighborhood    string  `json:"neighborhood"`
+	StateAcronym    string  `json:"stateAcronym"`
+	AddressStreet   string  `json:"addressStreet,omitempty"`
+	AddressPointLat float64 `json:"addressPointLat,omitempty"`
+	AddressPointLon float64 `json:"addressPointLon,omitempty"`
 }

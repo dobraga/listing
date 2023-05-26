@@ -1,7 +1,6 @@
 package property
 
 import (
-	"encoding/json"
 	"fetch/database"
 	"fetch/models"
 	"fetch/utils"
@@ -11,14 +10,24 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func FetchProperties(config models.SearchConfig, maxPage int) error {
+func StoreFetchProperties(config models.SearchConfig, maxPage int) error {
+	properties, err := FetchProperties(config, maxPage)
+	if err != nil {
+		return err
+	}
+
+	return database.StoreProperty(config, properties)
+}
+
+func FetchProperties(config models.SearchConfig, maxPage int) ([]models.Property, error) {
+	log.Infof("Searching listings from %+v", config)
 	var properties []models.Property
 	size := 24
 	query := createQuery(config, size)
 
 	qtdListings, err := qtdListings(config, query)
 	if err != nil {
-		return err
+		return properties, err
 	}
 	total_pages := int(qtdListings / size)
 	if maxPage < 0 {
@@ -32,13 +41,13 @@ func FetchProperties(config models.SearchConfig, maxPage int) error {
 		log.Debugf("Getting page %d from '%s'", page, config.Origin)
 		query["from"] = page * query["size"].(int)
 
-		bytesData, err := MakeRequest(false, config.Origin, query)
+		data, err := MakeRequest(false, config.Origin, query)
 		if err != nil {
 			log.Error(err)
 			continue
 		}
 
-		property, err := UnmarshalProperty(bytesData, config)
+		property, err := UnmarshalProperty(data, config)
 		if err != nil {
 			log.Error(err)
 			continue
@@ -53,25 +62,18 @@ func FetchProperties(config models.SearchConfig, maxPage int) error {
 		}
 	}
 
-	return database.StoreProperty(config, properties)
+	return properties, err
 }
 
 func qtdListings(config models.SearchConfig, query map[string]interface{}) (int, error) {
-	bytesData, err := MakeRequest(false, config.Origin, query)
+	data, err := MakeRequest(false, config.Origin, query)
 	if err != nil {
 		log.Error(err)
 		return 0, err
 	}
 
-	data := map[string]interface{}{}
-	err = json.Unmarshal(bytesData, &data)
-	if err != nil {
-		err := fmt.Errorf(fmt.Sprintf(
-			"erro ao buscar a quantidade de propriedades da página '%s' '%v' '%v': %v",
-			config.Origin, query, bytesData, err,
-		))
-		log.Error(err)
-		return 0, err
+	if utils.Contains(utils.GetKeys(data), "nearby") {
+		data = data["nearby"].(map[string]interface{})
 	}
 
 	if !utils.Contains(utils.GetKeys(data), "search") {
@@ -86,7 +88,7 @@ func qtdListings(config models.SearchConfig, query map[string]interface{}) (int,
 }
 
 func createQuery(config models.SearchConfig, size int) map[string]interface{} {
-	return map[string]interface{}{
+	data := map[string]interface{}{
 		"includeFields":       "search(result(listings(listing(displayAddressType,amenities,usableAreas,constructionStatus,listingType,description,title,stamps,createdAt,floors,unitTypes,nonActivationReason,providerId,propertyType,unitSubTypes,unitsOnTheFloor,legacyId,id,portal,unitFloor,parkingSpaces,updatedAt,address,suites,publicationType,externalId,bathrooms,usageTypes,totalAreas,advertiserId,advertiserContact,whatsappNumber,bedrooms,acceptExchange,pricingInfos,showPrice,resale,buildings,capacityLimit,status),account(id,name,logoUrl,licenseNumber,showAddress,legacyVivarealId,legacyZapId,minisite),medias,accountLink,link)),totalCount),expansion(search(result(listings(listing(displayAddressType,amenities,usableAreas,constructionStatus,listingType,description,title,stamps,createdAt,floors,unitTypes,nonActivationReason,providerId,propertyType,unitSubTypes,unitsOnTheFloor,legacyId,id,portal,unitFloor,parkingSpaces,updatedAt,address,suites,publicationType,externalId,bathrooms,usageTypes,totalAreas,advertiserId,advertiserContact,whatsappNumber,bedrooms,acceptExchange,pricingInfos,showPrice,resale,buildings,capacityLimit,status),account(id,name,logoUrl,licenseNumber,showAddress,legacyVivarealId,legacyZapId,minisite),medias,accountLink,link)),totalCount)),nearby(search(result(listings(listing(displayAddressType,amenities,usableAreas,constructionStatus,listingType,description,title,stamps,createdAt,floors,unitTypes,nonActivationReason,providerId,propertyType,unitSubTypes,unitsOnTheFloor,legacyId,id,portal,unitFloor,parkingSpaces,updatedAt,address,suites,publicationType,externalId,bathrooms,usageTypes,totalAreas,advertiserId,advertiserContact,whatsappNumber,bedrooms,acceptExchange,pricingInfos,showPrice,resale,buildings,capacityLimit,status),account(id,name,logoUrl,licenseNumber,showAddress,legacyVivarealId,legacyZapId,minisite),medias,accountLink,link)),totalCount)),page,fullUriFragments,developments(search(result(listings(listing(displayAddressType,amenities,usableAreas,constructionStatus,listingType,description,title,stamps,createdAt,floors,unitTypes,nonActivationReason,providerId,propertyType,unitSubTypes,unitsOnTheFloor,legacyId,id,portal,unitFloor,parkingSpaces,updatedAt,address,suites,publicationType,externalId,bathrooms,usageTypes,totalAreas,advertiserId,advertiserContact,whatsappNumber,bedrooms,acceptExchange,pricingInfos,showPrice,resale,buildings,capacityLimit,status),account(id,name,logoUrl,licenseNumber,showAddress,legacyVivarealId,legacyZapId,minisite),medias,accountLink,link)),totalCount)),superPremium(search(result(listings(listing(displayAddressType,amenities,usableAreas,constructionStatus,listingType,description,title,stamps,createdAt,floors,unitTypes,nonActivationReason,providerId,propertyType,unitSubTypes,unitsOnTheFloor,legacyId,id,portal,unitFloor,parkingSpaces,updatedAt,address,suites,publicationType,externalId,bathrooms,usageTypes,totalAreas,advertiserId,advertiserContact,whatsappNumber,bedrooms,acceptExchange,pricingInfos,showPrice,resale,buildings,capacityLimit,status),account(id,name,logoUrl,licenseNumber,showAddress,legacyVivarealId,legacyZapId,minisite),medias,accountLink,link)),totalCount)),owners(search(result(listings(listing(displayAddressType,amenities,usableAreas,constructionStatus,listingType,description,title,stamps,createdAt,floors,unitTypes,nonActivationReason,providerId,propertyType,unitSubTypes,unitsOnTheFloor,legacyId,id,portal,unitFloor,parkingSpaces,updatedAt,address,suites,publicationType,externalId,bathrooms,usageTypes,totalAreas,advertiserId,advertiserContact,whatsappNumber,bedrooms,acceptExchange,pricingInfos,showPrice,resale,buildings,capacityLimit,status),account(id,name,logoUrl,licenseNumber,showAddress,legacyVivarealId,legacyZapId,minisite),medias,accountLink,link)),totalCount))",
 		"addressNeighborhood": config.Local.Neighborhood,
 		"addressLocationId":   config.Local.LocationId,
@@ -100,4 +102,12 @@ func createQuery(config models.SearchConfig, size int) map[string]interface{} {
 		"size":                size,
 		"from":                24,
 	}
+
+	if config.Local.AddressStreet != "" {
+		data["addressStreet"] = config.Local.AddressStreet
+		data["addressPointLat"] = config.Local.AddressPointLat
+		data["addressPointLon"] = config.Local.AddressPointLon
+	}
+
+	return data
 }

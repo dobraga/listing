@@ -33,9 +33,10 @@ func main() {
 		})
 	})
 
-	r.GET("/locations/:location", func(c *gin.Context) {
+	r.GET("/locations/:type/:location", func(c *gin.Context) {
+		type_location := c.Param("type")
 		location := c.Param("location")
-		locations, err := property.ListLocations(location, "vivareal")
+		locations, err := property.ListLocations(location, type_location, "vivareal")
 
 		if err != nil {
 			c.JSON(400, err)
@@ -73,7 +74,7 @@ func main() {
 				l := location
 				l.Origin = o
 
-				err := property.FetchProperties(l, viper.GetInt("max_page"))
+				err := property.StoreFetchProperties(l, viper.GetInt("max_page"))
 				if err != nil {
 					channelErr <- err
 				}

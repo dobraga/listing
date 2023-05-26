@@ -1,16 +1,18 @@
 package property
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 var client http.Client = http.Client{}
 
-func MakeRequest(location bool, origin string, query map[string]interface{}) ([]byte, error) {
+func MakeRequest(location bool, origin string, query map[string]interface{}) (map[string]interface{}, error) {
 	var url string
 	var err error
 
@@ -33,6 +35,7 @@ func MakeRequest(location bool, origin string, query map[string]interface{}) ([]
 	}
 
 	req.URL.RawQuery = q.Encode()
+	logrus.Infof("Requisição da pagina '%s", req.URL)
 
 	// Headers
 	headers := makeHeaders(origin)
@@ -57,7 +60,19 @@ func MakeRequest(location bool, origin string, query map[string]interface{}) ([]
 		return nil, fmt.Errorf("erro no parse da página '%s' %v: %v", url, query, err)
 	}
 
-	return bytesData, nil
+	// Bytes to map
+	data := map[string]interface{}{}
+	err = json.Unmarshal(bytesData, &data)
+	if err != nil {
+		return nil, fmt.Errorf("erro no parse da página '%s' %v: %v", url, query, err)
+	}
+
+	erro_value, ok := data["err"]
+	if ok {
+		return nil, fmt.Errorf("erro na requisição da página '%s' %v: %v", url, query, erro_value)
+	}
+
+	return data, nil
 }
 
 func makeHeaders(origin string) map[string]string {

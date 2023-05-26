@@ -1,15 +1,14 @@
 package property
 
 import (
-	"encoding/json"
 	"errors"
 	"fetch/models"
-	"fmt"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
-func ListLocations(local string, origin string) ([]models.Local, error) {
+func ListLocations(local, type_location, origin string) ([]models.Local, error) {
 	mapLocations := map[string]models.Local{}
 	finalLocations := []models.Local{}
 
@@ -22,29 +21,25 @@ func ListLocations(local string, origin string) ([]models.Local, error) {
 	portal := siteInfo["portal"].(string)
 
 	query := map[string]interface{}{
-		"q": local, "fields": "neighborhood", "portal": portal, "size": "6",
+		"q": local, "portal": portal, "size": "6",
+		"fields":        "neighborhood,city,street",
+		"includeFields": "address.city,address.zone,address.state,address.neighborhood,address.stateAcronym,address.street,address.locationId,address.point",
 	}
 
-	bytesData, err := MakeRequest(true, origin, query)
+	data, err := MakeRequest(true, origin, query)
 	if err != nil {
 		return nil, err
 	}
 
-	data := map[string]interface{}{}
-	err = json.Unmarshal(bytesData, &data)
-	if err != nil {
-		return nil, fmt.Errorf("erro ao listar localizações %s: %v", local, err)
-	}
-
 	// Interface to map and get listings
-	data = data["neighborhood"].(map[string]interface{})
+	data = data["street"].(map[string]interface{})
 	data = data["result"].(map[string]interface{})
 	locations := data["locations"].([]interface{})
 
 	for _, location := range locations {
 		address := location.(map[string]interface{})["address"].(map[string]interface{})
 		locationId := address["locationId"].(string)
-
+		point := address["point"].(map[string]interface{})
 		sLocation := models.Local{
 			City:         address["city"].(string),
 			Zone:         address["zone"].(string),
@@ -53,6 +48,14 @@ func ListLocations(local string, origin string) ([]models.Local, error) {
 			Neighborhood: address["neighborhood"].(string),
 			StateAcronym: address["stateAcronym"].(string),
 		}
+
+		if type_location == "street" {
+			sLocation.AddressStreet = address["street"].(string)
+			sLocation.AddressPointLat = point["lon"].(float64)
+			sLocation.AddressPointLon = point["lat"].(float64)
+		}
+
+		logrus.Info(sLocation)
 
 		mapLocations[locationId] = sLocation
 	}
