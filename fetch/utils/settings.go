@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -39,7 +38,7 @@ func LoadSettings() {
 		if err != nil {
 			panic(err)
 		}
-		logrus.SetOutput(f)
+		log.SetOutput(f)
 		log.SetLevel(log.DebugLevel)
 
 	case "PRODUCTION":
