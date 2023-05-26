@@ -33,10 +33,9 @@ func main() {
 		})
 	})
 
-	r.GET("/locations/:type/:location", func(c *gin.Context) {
-		type_location := c.Param("type")
+	r.GET("/locations/:location", func(c *gin.Context) {
 		location := c.Param("location")
-		locations, err := property.ListLocations(location, type_location, "vivareal")
+		locations, err := property.ListLocations(location, "neighborhood", "vivareal")
 
 		if err != nil {
 			c.JSON(400, err)
