@@ -6,10 +6,12 @@ import (
 	"fetch/property"
 	"fetch/station"
 	"fetch/utils"
+	"fmt"
 	"net/http"
 	"sync"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -33,12 +35,21 @@ func main() {
 		})
 	})
 
-	r.GET("/locations/:location", func(c *gin.Context) {
-		location := c.Param("location")
-		locations, err := property.ListLocations(location, "neighborhood", "vivareal")
+	r.GET("/locations", func(c *gin.Context) {
+		type_location := c.DefaultQuery("type", "neighborhood")
+		location := c.Query("q")
+		if location == "" {
+			location = c.Query("location")
+		}
+
+		if location == "" {
+			c.JSON(400, "need a non empty string into 'location' or 'q'")
+			return
+		}
+		locations, err := property.ListLocations(location, type_location, "vivareal")
 
 		if err != nil {
-			c.JSON(400, err)
+			c.JSON(500, err)
 			return
 		} else {
 			c.JSON(200, locations)
@@ -46,7 +57,7 @@ func main() {
 		}
 	})
 
-	r.GET("listings/:business_type/:listing_type/:city/:locationId/:neighborhood/:state/:stateAcronym/:zone", func(c *gin.Context) {
+	r.GET("listings", func(c *gin.Context) {
 		wg := new(sync.WaitGroup)
 		channelErr := make(chan error)
 
@@ -54,13 +65,17 @@ func main() {
 		location.ExtractFromContext(c)
 		errs := location.Validation()
 		if len(errs) > 0 {
-			c.JSON(400, errs)
+			err_str := fmt.Sprintf("Errors: %+v", errs)
+			logrus.Errorf(err_str)
+			c.JSON(500, err_str)
 			return
 		}
 
 		err = database.ResetActive(location)
 		if err != nil {
-			c.JSON(400, err)
+			err_str := fmt.Sprintf("Errors: %+v", errs)
+			logrus.Errorf(err_str)
+			c.JSON(500, err_str)
 			return
 		}
 
@@ -87,11 +102,48 @@ func main() {
 			errs = append(errs, err)
 		}
 
-		if errs != nil {
-			c.JSON(400, errs)
+		if len(errs) > 0 {
+			err_str := fmt.Sprintf("Errors: %+v", errs)
+			logrus.Errorf(err_str)
+			c.JSON(500, err_str)
 			return
 		} else {
 			c.JSON(200, "Saved successfully")
+			return
+		}
+	})
+
+	r.GET("get_listings", func(c *gin.Context) {
+		var all_properties []models.Property
+
+		location := models.SearchConfig{}
+		location.ExtractFromContext(c)
+		errs := location.Validation()
+		if len(errs) > 0 {
+			err_str := fmt.Sprintf("Errors: %+v", errs)
+			logrus.Errorf(err_str)
+			c.JSON(500, err_str)
+			return
+		}
+
+		for _, origin := range todosSites {
+			l := location
+			l.Origin = origin
+
+			properties, err := property.FetchProperties(l, viper.GetInt("max_page"))
+			if err != nil {
+				errs = append(errs, err)
+			}
+			all_properties = append(all_properties, properties...)
+		}
+
+		if len(errs) > 0 {
+			err_str := fmt.Sprintf("Errors: %+v", errs)
+			logrus.Errorf(err_str)
+			c.JSON(500, err_str)
+			return
+		} else {
+			c.JSON(200, all_properties)
 			return
 		}
 	})
