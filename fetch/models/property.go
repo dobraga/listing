@@ -10,6 +10,8 @@ type Property struct {
 	StateAcronym      string
 	City              string
 	Zone              string
+	Street            string
+	StreetNumber      string
 	BusinessType      string `gorm:"primaryKey"`
 	ListingType       string
 	Title             string
@@ -78,9 +80,10 @@ type Address struct {
 	Point        LatLong `json:"point"`
 	State        string  `json:"state"`
 	StateAcronym string  `json:"stateAcronym"`
-	StreetNumber string  `json:"streetNumber"`
 	ZipCode      string  `json:"zipCode"`
 	Zone         string  `json:"zone"`
+	Street       string  `json:"street"`
+	StreetNumber string  `json:"streetNumber"`
 }
 
 type LatLong struct {

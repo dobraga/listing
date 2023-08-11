@@ -26,11 +26,11 @@ func UnmarshalProperty(data map[string]interface{}, l models.SearchConfig) ([]mo
 
 	// Slice of listings to Struct
 	jsonBytes, err := json.Marshal(listingsPage)
+	// os.WriteFile("test.json", jsonBytes, 0666)
 	if err != nil {
 		err = fmt.Errorf("erro na transformação para binário '%v': %v", listingsPage, err)
 		log.Error(err)
 		return listProperty, err
-		// os.WriteFile("test.json", jsonBytes, 0666)
 	}
 
 	err = json.Unmarshal(jsonBytes, &listNestedProperty)
@@ -69,11 +69,13 @@ func UnmarshalProperty(data map[string]interface{}, l models.SearchConfig) ([]mo
 
 				property.Origin = l.Origin
 				property.Url = nestedProperty.Link.Href
-				property.Neighborhood = l.Local.Neighborhood
-				property.State = l.Local.State
-				property.StateAcronym = l.Local.StateAcronym
-				property.City = l.Local.City
-				property.Zone = l.Local.Zone
+				property.Neighborhood = nestedProperty.Listing.Address.Neighborhood
+				property.State = nestedProperty.Listing.Address.State
+				property.StateAcronym = nestedProperty.Listing.Address.StateAcronym
+				property.City = nestedProperty.Listing.Address.City
+				property.Zone = nestedProperty.Listing.Address.Zone
+				property.Street = nestedProperty.Listing.Address.Street
+				property.StreetNumber = nestedProperty.Listing.Address.StreetNumber
 				property.BusinessType = l.BusinessType
 				property.ListingType = nestedProperty.Listing.ListingType
 				property.Title = nestedProperty.Listing.Title
@@ -91,7 +93,9 @@ func UnmarshalProperty(data map[string]interface{}, l models.SearchConfig) ([]mo
 				property.CondoFee = monthlyCondoFee
 				property.CreatedDate = nestedProperty.Listing.CreatedAt
 				property.UpdatedDate = nestedProperty.Listing.UpdatedAt
-				property.Images = media
+				if !l.DropImages {
+					property.Images = media
+				}
 				property.Active = true
 
 				listProperty = append(listProperty, property)

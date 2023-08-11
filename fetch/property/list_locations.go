@@ -9,6 +9,7 @@ import (
 )
 
 func ListLocations(local, type_location, origin string) ([]models.Local, error) {
+	logrus.Infof("Searching '%s' locations for type '%s'", local, type_location)
 	mapLocations := map[string]models.Local{}
 	finalLocations := []models.Local{}
 
@@ -51,11 +52,9 @@ func ListLocations(local, type_location, origin string) ([]models.Local, error) 
 
 		if type_location == "street" {
 			sLocation.AddressStreet = address["street"].(string)
-			sLocation.AddressPointLat = point["lon"].(float64)
-			sLocation.AddressPointLon = point["lat"].(float64)
+			sLocation.AddressPointLat = point["lat"].(float64)
+			sLocation.AddressPointLon = point["lon"].(float64)
 		}
-
-		logrus.Info(sLocation)
 
 		mapLocations[locationId] = sLocation
 	}
