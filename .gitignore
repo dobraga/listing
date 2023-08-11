@@ -2,6 +2,9 @@ go_listings
 *.json
 *.sql
 *.db
+*.sqlite
+*.csv
+*.xlsx
 *.pyc
 .vscode/
 *.log
