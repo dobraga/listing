@@ -46,30 +46,30 @@ func MakeRequest(location bool, origin string, query map[string]interface{}) (ma
 	// Request
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("erro na requisição da página '%s' %v: %v", url, query, err)
+		return nil, fmt.Errorf("erro na requisição da página '%v': %v", req.URL, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("erro na requisição da página '%s' %v: status code %v", url, query, resp.StatusCode)
+		return nil, fmt.Errorf("erro na requisição da página '%v': status code %v", req.URL, resp.StatusCode)
 	}
 
 	// Response to interface
 	bytesData, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("erro no parse da página '%s' %v: %v", url, query, err)
+		return nil, fmt.Errorf("erro no parse da página '%v': %v", req.URL, err)
 	}
 
 	// Bytes to map
 	data := map[string]interface{}{}
 	err = json.Unmarshal(bytesData, &data)
 	if err != nil {
-		return nil, fmt.Errorf("erro no parse da página '%s' %v: %v", url, query, err)
+		return nil, fmt.Errorf("erro no parse da página '%v': %v", req.URL, err)
 	}
 
 	erro_value, ok := data["err"]
 	if ok {
-		return nil, fmt.Errorf("erro na requisição da página '%s' %v: %v", url, query, erro_value)
+		return nil, fmt.Errorf("erro na requisição da página '%v': %v", req.URL, erro_value)
 	}
 
 	return data, nil
