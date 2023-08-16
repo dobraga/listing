@@ -1,7 +1,7 @@
 package station
 
 import (
-	"fetch/models"
+	"fetch/pkg/models"
 	"fmt"
 	"testing"
 )

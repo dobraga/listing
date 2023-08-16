@@ -1,9 +1,8 @@
-package database
+package station
 
 import (
-	"fetch/models"
+	"fetch/pkg/models"
 
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -12,7 +11,6 @@ func GetTransportSystems() []models.TransportSystem {
 	var transportSystems []models.TransportSystem
 
 	mapSites := viper.GetStringMap("metro_trem")
-	db := Connect()
 
 	for uf, urls := range mapSites {
 		listUrls := urls.([]interface{})
@@ -24,17 +22,7 @@ func GetTransportSystems() []models.TransportSystem {
 		}
 	}
 
-	for _, system := range allTransportSystems {
-		var station models.Station
-
-		db.Where("transport_system_url = ?", system.URL).First(&station)
-		if station.TransportSystemURL != system.URL {
-			logrus.Infof("Extract data from '%s'", system.URL)
-			transportSystems = append(transportSystems, system)
-		} else {
-			logrus.Debugf("Already extracted data from '%s'", system.URL)
-		}
-	}
+	transportSystems = append(transportSystems, allTransportSystems...)
 
 	return transportSystems
 }

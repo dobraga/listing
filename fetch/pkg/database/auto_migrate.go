@@ -1,7 +1,7 @@
 package database
 
 import (
-	"fetch/models"
+	"fetch/pkg/models"
 )
 
 func AutoMigrate() {

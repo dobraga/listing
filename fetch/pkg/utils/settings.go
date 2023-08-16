@@ -9,12 +9,16 @@ import (
 	"github.com/spf13/viper"
 )
 
-var envVariables = []string{"DEBUG", "max_page", "force_update", "POSTGRES_HOST"}
+var envVariables = []string{"DEBUG", "max_page", "force_update", "MODEL_HOST", "POSTGRES_HOST"}
 var postgresVariables = []string{"POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_DB", "POSTGRES_PORT"}
 
 func LoadSettings() {
-	if _, err := os.Stat(".env"); err != nil {
-		os.Chdir("../")
+	for {
+		if _, err := os.Stat(".env"); err != nil {
+			os.Chdir("../")
+		} else {
+			break
+		}
 	}
 
 	log.Debug("Loading .env")
@@ -31,6 +35,7 @@ func LoadSettings() {
 
 	format := &log.JSONFormatter{}
 	log.SetFormatter(format)
+	log.SetReportCaller(true)
 
 	switch env {
 	case "DEVELOPMENT":

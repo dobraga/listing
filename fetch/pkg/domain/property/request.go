@@ -12,6 +12,16 @@ import (
 
 var client http.Client = http.Client{}
 
+// MakeRequest makes a HTTP GET request to a specific location or listings, with optional query parameters.
+//
+// Parameters:
+// - location: a boolean indicating whether to request locations or listings.
+// - origin: a string representing the origin to make the request to.
+// - query: a map[string]interface{} containing optional query parameters.
+//
+// Returns:
+// - map[string]interface{}: the response data as a map.
+// - error: an error if the request fails.
 func MakeRequest(location bool, origin string, query map[string]interface{}) (map[string]interface{}, error) {
 	var url string
 	var err error

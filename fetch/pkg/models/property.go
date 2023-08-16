@@ -3,35 +3,35 @@ package models
 import "time"
 
 type Property struct {
-	Origin            string `gorm:"primaryKey"`
-	Url               string `gorm:"primaryKey"`
-	Neighborhood      string
-	State             string
-	StateAcronym      string
-	City              string
-	Zone              string
-	Street            string
-	StreetNumber      string
-	BusinessType      string `gorm:"primaryKey"`
-	ListingType       string
-	Title             string
-	UsableArea        int
-	Floors            int
-	UnitTypes         string
-	Bedrooms          int
-	Bathrooms         int
-	Suites            int
-	ParkingSpaces     int
-	Amenities         string
-	Lat               float64
-	Lon               float64
-	Price             float64
-	CondoFee          float64
-	PredictTotalPrice float64
-	CreatedDate       time.Time
-	UpdatedDate       time.Time
-	Images            string
-	Active            bool
+	Origin            string    `gorm:"primaryKey" json:"-"`
+	Url               string    `gorm:"primaryKey" json:"url"`
+	Neighborhood      string    `json:"neighborhood"`
+	State             string    `json:"-"`
+	StateAcronym      string    `json:"-"`
+	City              string    `json:"-"`
+	Zone              string    `json:"-"`
+	Street            string    `json:"-"`
+	StreetNumber      string    `json:"-"`
+	BusinessType      string    `gorm:"primaryKey" json:"-"`
+	ListingType       string    `json:"-"`
+	Title             string    `json:"-"`
+	UsableArea        int       `json:"usable_area"`
+	Floors            int       `json:"-"`
+	UnitTypes         string    `json:"unit_types"`
+	Bedrooms          int       `json:"bedrooms"`
+	Bathrooms         int       `json:"bathrooms"`
+	Suites            int       `json:"-"`
+	ParkingSpaces     int       `json:"parking_spaces"`
+	Amenities         string    `json:"-"`
+	Lat               float64   `json:"lat"`
+	Lon               float64   `json:"lon"`
+	Price             float64   `json:"-"`
+	CondoFee          float64   `json:"-"`
+	PredictTotalPrice float64   `json:"-"`
+	CreatedDate       time.Time `json:"-"`
+	UpdatedDate       time.Time `json:"-"`
+	Images            string    `json:"-"`
+	Active            bool      `json:"-"`
 }
 
 type NestedProperty struct {

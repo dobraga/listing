@@ -15,25 +15,31 @@ type SearchConfig struct {
 	BusinessType string `json:"businessType"`
 	ListingType  string `json:"listingType"`
 	Origin       string `json:"origin"`
+	DropImages   bool   `json:"dropImages"`
 }
 
 func (s *SearchConfig) ExtractFromContext(c *gin.Context) {
-	addressPointLat, _ := strconv.ParseFloat(c.Param("addressPointLat"), 64)
-	addressPointLon, _ := strconv.ParseFloat(c.Param("addressPointLon"), 64)
-
+	dropImages, _ := strconv.ParseBool(c.DefaultQuery("dropImages", "false"))
 	s.Local = Local{
-		City:            c.Param("city"),
-		Zone:            c.Param("zone"),
-		State:           c.Param("state"),
-		LocationId:      c.Param("locationId"),
-		Neighborhood:    c.Param("neighborhood"),
-		StateAcronym:    c.Param("stateAcronym"),
-		AddressStreet:   c.Param("addressStreet"),
-		AddressPointLat: addressPointLat,
-		AddressPointLon: addressPointLon,
+		City:         c.Query("city"),
+		Zone:         c.Query("zone"),
+		State:        c.Query("state"),
+		LocationId:   c.Query("locationId"),
+		Neighborhood: c.Query("neighborhood"),
+		StateAcronym: c.Query("stateAcronym"),
 	}
-	s.BusinessType = c.Param("business_type")
-	s.ListingType = c.Param("listing_type")
+	s.BusinessType = c.Query("business_type")
+	s.ListingType = c.Query("listing_type")
+	s.DropImages = dropImages
+
+	addressStreet := c.Query("addressStreet")
+	if addressStreet != "" {
+		s.Local.AddressStreet = addressStreet
+		addressPointLat, _ := strconv.ParseFloat(c.Query("addressPointLat"), 64)
+		addressPointLon, _ := strconv.ParseFloat(c.Query("addressPointLon"), 64)
+		s.Local.AddressPointLat = addressPointLat
+		s.Local.AddressPointLon = addressPointLon
+	}
 }
 
 func (l *SearchConfig) Validation() []error {
@@ -41,12 +47,12 @@ func (l *SearchConfig) Validation() []error {
 	var err error
 
 	if _, ok := businessTypeValues[l.BusinessType]; !ok {
-		err = fmt.Errorf("business types allowed ['RENTAL', 'SALE']")
+		err = fmt.Errorf("business types allowed [business_type='RENTAL' or business_type='SALE']")
 		errs = append(errs, err)
 	}
 
 	if _, ok := listingTypeValues[l.ListingType]; !ok {
-		err = fmt.Errorf("listing types allowed ['DEVELOPMENT', 'USED']")
+		err = fmt.Errorf("listing types allowed [listing_type='DEVELOPMENT' or listing_type='USED']")
 		errs = append(errs, err)
 	}
 
@@ -89,11 +95,7 @@ func (l *SearchConfig) Validation() []error {
 	// 	errs = append(errs, err)
 	// }
 
-	if errs != nil {
-		return errs
-	}
-
-	return nil
+	return errs
 }
 
 type Local struct {

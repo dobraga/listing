@@ -1,9 +1,9 @@
 package property
 
 import (
-	"fetch/database"
-	"fetch/models"
-	"fetch/utils"
+	"fetch/pkg/database"
+	"fetch/pkg/models"
+	"fetch/pkg/utils"
 	"fmt"
 	"time"
 

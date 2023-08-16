@@ -1,11 +1,15 @@
-http://localhost:5000/locations?q=barra da tijuca
+http://localhost:6000/locations?q=barra da tijuca
 
 
 
 ### error example
-http://localhost:5000/listings?
+http://localhost:6000/listings?
 
 
 
 ###
-http://localhost:5000/listings/RENTAL/USED/Rio de Janeiro/BR>Rio de Janeiro>NULL>Rio de Janeiro>Zona Oeste>Barra da Tijuca/Barra da Tijuca/Rio de Janeiro/RJ/Zona Oeste
+http://localhost:6000/listings?business_type=RENTAL&listing_type=USED&city=Rio de Janeiro&locationId=BR>Rio de Janeiro>NULL>Rio de Janeiro>Zona Oeste>Barra da Tijuca&neighborhood=Barra da Tijuca&state=Rio de Janeiro&stateAcronym=RJ&zone=Zona Oeste
+
+
+###
+http://localhost:6000/listings?return_listings=true&business_type=RENTAL&listing_type=USED&city=Rio de Janeiro&locationId=BR>Rio de Janeiro>NULL>Rio de Janeiro>Zona Oeste>Barra da Tijuca&neighborhood=Barra da Tijuca&state=Rio de Janeiro&stateAcronym=RJ&zone=Zona Oeste

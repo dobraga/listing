@@ -1,7 +1,7 @@
 package database
 
 import (
-	"fetch/models"
+	"fetch/pkg/models"
 
 	"gorm.io/gorm/clause"
 )

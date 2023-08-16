@@ -5,12 +5,8 @@ WORKDIR /app
 COPY fetch/go.mod ./
 COPY fetch/go.sum ./
 
-COPY fetch/./*.go ./
-COPY fetch/database/ ./database
-COPY fetch/models/ ./models
-COPY fetch/property/ ./property
-COPY fetch/station/ ./station
-COPY fetch/utils/ ./utils
+COPY fetch/cmd/api/main.go ./
+COPY fetch/pkg/ ./pkg
 
 RUN go mod download && CGO_ENABLED=0 go build -o ./go-listing
 

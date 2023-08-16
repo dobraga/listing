@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fetch/property"
-	"fetch/utils"
+	"fetch/pkg/domain/property"
+	"fetch/pkg/utils"
 	"testing"
 
 	"github.com/sirupsen/logrus"

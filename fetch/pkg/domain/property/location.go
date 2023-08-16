@@ -2,7 +2,7 @@ package property
 
 import (
 	"errors"
-	"fetch/models"
+	"fetch/pkg/models"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"

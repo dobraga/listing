@@ -2,8 +2,9 @@ package property
 
 import (
 	"encoding/json"
-	"fetch/models"
-	"fetch/utils"
+	"fetch/pkg/domain/model"
+	"fetch/pkg/models"
+	"fetch/pkg/utils"
 	"fmt"
 	"strconv"
 	"strings"
@@ -97,6 +98,13 @@ func UnmarshalProperty(data map[string]interface{}, l models.SearchConfig) ([]mo
 					property.Images = media
 				}
 				property.Active = true
+
+				property, err = model.Predict(property)
+				if err != nil {
+					err = fmt.Errorf("erro no predict: %v", err)
+					log.Error(err)
+					return listProperty, err
+				}
 
 				listProperty = append(listProperty, property)
 			}

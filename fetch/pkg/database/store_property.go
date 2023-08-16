@@ -1,7 +1,7 @@
 package database
 
 import (
-	"fetch/models"
+	"fetch/pkg/models"
 
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm/clause"

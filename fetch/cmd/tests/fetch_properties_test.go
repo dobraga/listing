@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fetch/models"
-	"fetch/property"
-	"fetch/utils"
+	"fetch/pkg/domain/property"
+	"fetch/pkg/models"
+	"fetch/pkg/utils"
 	"fmt"
 	"testing"
 

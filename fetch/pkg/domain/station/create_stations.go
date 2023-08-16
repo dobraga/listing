@@ -1,13 +1,13 @@
 package station
 
 import (
-	"fetch/database"
+	"fetch/pkg/database"
 
 	"github.com/sirupsen/logrus"
 )
 
 func CheckExistsExtractCreate() error {
-	transportSystems := database.GetTransportSystems()
+	transportSystems := GetTransportSystems()
 	stations, errs := FetchStations(transportSystems)
 	logrus.Infof("Extracted %d stations", len(stations))
 
