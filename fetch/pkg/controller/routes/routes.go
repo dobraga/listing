@@ -7,6 +7,7 @@ import (
 )
 
 func InitRoutes(r *gin.RouterGroup) {
+	r.GET("/health", middlewares.Health)
 	r.GET("/locations", middlewares.ListLocation)
 	r.GET("/listings", middlewares.StoreListings)
 }
