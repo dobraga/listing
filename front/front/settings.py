@@ -22,6 +22,8 @@ def init():
         if var not in config:
             raise KeyError(f'.env file not found "{var}"')
 
+    config['url'] = f"http://{config['BACKEND_HOST']}:{config['BACKEND_PORT']}"
+
     return config
 
 

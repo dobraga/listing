@@ -1,14 +1,16 @@
 from math import ceil
 
-import dash_bootstrap_components as dbc
-import pandas as pd
-import requests
-from dash import Dash, dcc, html
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
+import dash_bootstrap_components as dbc
+from dash import Dash, dcc, html
 from sqlalchemy import create_engine
+from logging import getLogger
+from requests import get
+import pandas as pd
 
 from front.pages import map, table
+from front.components.location import Location
 
 depara_tp_contrato = [
     {"label": "Aluguel", "value": "RENTAL"},
@@ -64,6 +66,18 @@ layout = html.Div(
                         dbc.Label("Busca Local"),
                         dbc.InputGroup(
                             [
+                                html.Div([
+                                    dbc.Label("Tipo da localização"),
+                                    dbc.RadioItems(
+                                        options=[
+                                            {"label": "Rua", "value": "street"},
+                                            {"label": "Bairro",
+                                                "value": "neighborhood"},
+                                        ],
+                                        value="neighborhood",
+                                        id="type_location",
+                                    )
+                                ]),
                                 dbc.Input(
                                     id="local",
                                     placeholder="Local",
@@ -192,26 +206,19 @@ def init_app(app: Dash, settings: dict) -> Dash:
         Output("select_local", "value"),
         Output("fade_search_imoveis", "is_in"),
         Input("search_local", "n_clicks"),
+        Input("type_location", "value"),
         State("local", "value"),
     )
-    def search_local(_, value):
+    def search_local(_, type_location, value):
         if not value:
             raise PreventUpdate
 
-        r = requests.get(
-            f"http://{settings['BACKEND_HOST']}:{settings['BACKEND_PORT']}/locations/{value}"
-        )
-        r.raise_for_status()
+        locations = Location.parse(
+            f"{settings['url']}/locations/?type={type_location}&location={value}")
 
-        locations = r.json()
-
-        values = [
-            {
-                "label": ", ".join([l["stateAcronym"], l["city"], l["neighborhood"]]),
-                "value": l["locationId"],
-            }
-            for l in locations
-        ]
+        locations = [l.dict() for l in locations]
+        values = [{"label": l["label"], "value": l["value"]}
+                  for l in locations]
 
         return locations, values, values[0]["value"], True
 
@@ -236,7 +243,7 @@ def init_app(app: Dash, settings: dict) -> Dash:
         State("business_type", "value"),
         State("listing_type", "value"),
     )
-    def search_imoveis(_, locations, value, business_value, listing_value):
+    def search_imoveis(_, locations: list[dict], value, business_value, listing_value):
         if not value:
             raise PreventUpdate
 
@@ -245,8 +252,7 @@ def init_app(app: Dash, settings: dict) -> Dash:
             f"@{settings['POSTGRES_HOST']}:{settings['POSTGRES_PORT']}/{settings['POSTGRES_DB']}"
         )
 
-        selected_location = [
-            l for l in locations if l["locationId"] == value][0]
+        selected_location = [l for l in locations if l["value"] == value][0]
 
         business_type = [
             o for o in depara_tp_contrato if o["value"] == business_value]
@@ -257,22 +263,29 @@ def init_app(app: Dash, settings: dict) -> Dash:
         listing_type = listing_type[0]["value"]
 
         url = (
-            f"http://{settings['BACKEND_HOST']}:{settings['BACKEND_PORT']}/listings/{business_type}/{listing_type}/"
-            "{}/{}/{}/{}/{}/{}".format(
-                selected_location["city"],
-                selected_location["locationId"],
-                selected_location["neighborhood"],
-                selected_location["state"],
-                selected_location["stateAcronym"],
-                selected_location["zone"],
-            )
+            "{url}/listings?"
+            "business_type={business_type}&listing_type={listing_type}&"
+            "&locationId={locationId}&city={city}&neighborhood={neighborhood}"
+            "&state={state}&stateAcronym={stateAcronym}&zone={zone}"
+        ).format(
+            url=settings["url"],
+            locationId=selected_location["locationId"],
+            city=selected_location["city"],
+            neighborhood=selected_location["neighborhood"],
+            state=selected_location["state"],
+            stateAcronym=selected_location["stateAcronym"],
+            zone=selected_location["zone"],
+            business_type=business_type,
+            listing_type=listing_type,
         )
-
-        r = requests.get(url)
+        LOG.info("Getting data from '%s'", url)
+        r = get(url)
         r.raise_for_status()
 
         query = f"""
-        SELECT *, (price + condo_fee) as total_fee
+        SELECT *,
+               (price + condo_fee)           AS total_fee,
+               ROUND(predict_total_price, 2) AS total_fee_predict
         FROM properties
         WHERE
             business_type = '{business_type}'
@@ -284,9 +297,10 @@ def init_app(app: Dash, settings: dict) -> Dash:
             AND zone = '{selected_location['zone']}'
             AND active
         """
+        LOG.info("Running query: '%s'", query)
         df = pd.read_sql_query(query, engine)
         if df.empty:
-            return {}, True, [0] * 12
+            return df.to_dict("records"), True, *[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
         return (
             df.to_dict("records"),
@@ -335,3 +349,6 @@ def init_app(app: Dash, settings: dict) -> Dash:
         return df.to_dict("records")
 
     return app
+
+
+LOG = getLogger(__name__)
