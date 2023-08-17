@@ -1,0 +1,4 @@
+POST http://localhost:8080/predict
+content-type: application/json
+
+{"input": [[220, 3, 4, 4, 3, 3], [110, 3, 4, 4, 3, 3]]}

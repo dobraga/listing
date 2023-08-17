@@ -1,0 +1,52 @@
+###
+http://localhost:5060/health
+
+###
+POST http://localhost:5060/rental
+content-type: application/json
+
+{
+    "data": [
+        {
+            "usable_area": 50,
+            "lon": 0,
+            "lat": 0,
+            "parking_spaces": 0,
+            "bathrooms": 1,
+            "bedrooms": 3,
+            "unit_types": "APARTMENT",
+            "neighborhood": "Tijuca"
+        },
+        {
+            "usable_area": 90,
+            "lon": 0,
+            "lat": 0,
+            "parking_spaces": 0,
+            "bathrooms": 1,
+            "bedrooms": 3,
+            "unit_types": "HOME",
+            "neighborhood": "Tijuca"
+        },
+        {
+            "usable_area": 70,
+            "lon": 0,
+            "lat": 0,
+            "parking_spaces": 0,
+            "bathrooms": 1,
+            "bedrooms": 3,
+            "unit_types": "HOME",
+            "neighborhood": "Barra da Tijuca"
+        }
+    ]
+}
+
+###
+
+POST http://localhost:5060/rental
+content-type: application/json
+
+{   "data": [
+
+    {"neighborhood":"Tijuca","usable_area":95,"unit_types":"APARTMENT","bedrooms":3,"bathrooms":1,"parking_spaces":1,"lat":-22.924114227294922,"lon":-43.22732925415039}
+    ]
+}

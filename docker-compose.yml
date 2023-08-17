@@ -46,6 +46,23 @@ services:
             - ${FRONT_PORT}:${FRONT_PORT}
         networks:
             - network
+
+    model:
+        build:
+            dockerfile: ./model/Dockerfile
+        restart: always
+        env_file:
+            - ./.env
+        ports:
+            - ${MODEL_PORT}:${MODEL_PORT}
+        networks:
+            - network
+        healthcheck:
+            test: ["CMD-SHELL", "curl", "http://localhost:${MODEL_PORT}/health"]
+            interval: 10s
+            retries: 5
+            start_period: 1s
+            timeout: 3s
         depends_on:
             db:
                 condition: service_healthy
