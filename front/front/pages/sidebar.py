@@ -261,6 +261,7 @@ def init_app(app: Dash, settings: dict) -> Dash:
         listing_type = [
             o for o in depara_tp_listings if o["value"] == listing_value]
         listing_type = listing_type[0]["value"]
+        LOG.info("Getting data from %s", selected_location)
 
         url = (
             "{url}/listings?"
@@ -283,9 +284,29 @@ def init_app(app: Dash, settings: dict) -> Dash:
         r.raise_for_status()
 
         query = f"""
-        SELECT *,
+        SELECT business_type,
+               origin,
+               url,
+               title,
+               usable_area,
+               unit_types,
+               bedrooms,
+               bathrooms,
+               suites,
+               parking_spaces,
+
+               street,
+               street_number,
+               lat,
+               lon,
+
+               price,
+               condo_fee,
                (price + condo_fee)           AS total_fee,
-               ROUND(predict_total_price, 2) AS total_fee_predict
+               ROUND(predict_total_price, 2) AS total_fee_predict,
+
+               images,
+               amenities
         FROM properties
         WHERE
             business_type = '{business_type}'
