@@ -70,7 +70,7 @@ func UnmarshalProperty(data map[string]interface{}, l models.SearchConfig) ([]mo
 
 				property.Origin = l.Origin
 				property.Url = nestedProperty.Link.Href
-				property.Neighborhood = nestedProperty.Listing.Address.Neighborhood
+				property.Neighborhood = l.Local.Neighborhood
 				property.State = nestedProperty.Listing.Address.State
 				property.StateAcronym = nestedProperty.Listing.Address.StateAcronym
 				property.City = nestedProperty.Listing.Address.City
