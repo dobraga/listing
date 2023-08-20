@@ -7,7 +7,7 @@ from dash.dependencies import Input, Output
 
 from front.components.box import box
 
-N = 500
+N = 250
 
 
 layout = html.Div(
@@ -35,12 +35,17 @@ def init_app(app: Dash) -> Dash:
             raise PreventUpdate
 
         df = pd.DataFrame(data).query("lat != 0 or lon != 0")
+        df["fl_latlon"] = ((df["lat"] != 0) & (df["lon"] != 0)).astype(int)
+
+        df = df.sort_values("fl_latlon", ascending=False)\
+            .groupby(["title", "total_fee"], sort=False)\
+            .head(1)
+
         total = df.shape[0]
+        msg = f"Exibindo {total} imóveis"
         if total > N:
             df = df.head(N)
             msg = f"Exibindo {N} imoveis do total de {total} imóveis"
-        else:
-            msg = f"Exibindo {total} imóveis"
 
         map = Map(
             location=df[["lat", "lon"]].mean().values,
