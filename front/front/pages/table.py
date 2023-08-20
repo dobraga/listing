@@ -11,8 +11,6 @@ layout = DataTable(
         {"name": "Título", "id": "title", "type": "text", "presentation": "markdown"},
         {"name": "Área Útil", "id": "usable_area"},
         {"name": "Tipo", "id": "unit_types"},
-        # {"name": "Estação", "id": "estacao"},
-        # {"name": "Distância", "id": "distance"},
         {"name": "Preço Total", "id": "total_fee"},
         {"name": "Preço Predito", "id": "total_fee_predict"},
         {"name": "Erro", "id": "error"},
@@ -30,7 +28,6 @@ layout = DataTable(
         {"if": {"column_id": "title"}, "maxWidth": 45, "textAlign": "left"},
         {"if": {"column_id": "usable_area"}, "maxWidth": 15},
         {"if": {"column_id": "unit_types"}, "maxWidth": 20, "textAlign": "left"},
-        {"if": {"column_id": "distance"}, "maxWidth": 20},
         {"if": {"column_id": "total_fee"}, "maxWidth": 20},
         {"if": {"column_id": "total_fee_predict"}, "maxWidth": 20},
         {"if": {"column_id": "error"}, "maxWidth": 20},
@@ -64,6 +61,10 @@ def init_app(app: Dash) -> Dash:
         dff = dff.sort_values("fl_latlon", ascending=False)\
             .groupby(["title", "total_fee"], sort=False)\
             .head(1)
+
+        dff["title"] = dff[["street", "street_number"]]\
+            .apply(lambda x: f"{x[0]}, {x[1]}" if x[0] else None, axis=1)\
+            .fillna(dff["title"])
 
         dff["title"] = dff[["title", "origin", "url"]].apply(
             lambda x: f"[{x[0]}](https://www.{x[1]}.com.br/imovel/{x[2]})", axis=1
