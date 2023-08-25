@@ -22,12 +22,10 @@ func Predict(p models.Property) (models.Property, error) {
 		fmt.Printf("Error: %s", err)
 		return p, err
 	}
-	fmt.Println(string(body))
 
 	url := fmt.Sprintf(
 		"http://%s:%s/%s", viper.GetString("MODEL_HOST"),
 		viper.GetString("MODEL_PORT"), strings.ToLower(p.BusinessType))
-	fmt.Println(url)
 
 	log.Debugf("Getting '%s' in  '%s'", body, url)
 
