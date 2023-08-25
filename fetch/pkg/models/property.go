@@ -6,27 +6,27 @@ type Property struct {
 	Origin            string    `gorm:"primaryKey" json:"-"`
 	Url               string    `gorm:"primaryKey" json:"url"`
 	Neighborhood      string    `json:"neighborhood"`
-	State             string    `json:"-"`
+	State             string    `json:"state"`
 	StateAcronym      string    `json:"-"`
 	City              string    `json:"-"`
-	Zone              string    `json:"-"`
-	Street            string    `json:"-"`
-	StreetNumber      string    `json:"-"`
-	BusinessType      string    `gorm:"primaryKey" json:"-"`
-	ListingType       string    `json:"-"`
+	Zone              string    `json:"zone"`
+	Street            string    `json:"street"`
+	StreetNumber      string    `json:"street_number"`
+	BusinessType      string    `gorm:"primaryKey" json:"business_type"`
+	ListingType       string    `json:"listing_type"`
 	Title             string    `json:"-"`
 	UsableArea        int       `json:"usable_area"`
 	Floors            int       `json:"-"`
 	UnitTypes         string    `json:"unit_types"`
 	Bedrooms          int       `json:"bedrooms"`
 	Bathrooms         int       `json:"bathrooms"`
-	Suites            int       `json:"-"`
+	Suites            int       `json:"suites"`
 	ParkingSpaces     int       `json:"parking_spaces"`
-	Amenities         string    `json:"-"`
+	Amenities         string    `json:"ameneties"`
 	Lat               float64   `json:"lat"`
 	Lon               float64   `json:"lon"`
-	Price             float64   `json:"-"`
-	CondoFee          float64   `json:"-"`
+	Price             float64   `json:"price"`
+	CondoFee          float64   `json:"condo_fee"`
 	PredictTotalPrice float64   `json:"-"`
 	CreatedDate       time.Time `json:"-"`
 	UpdatedDate       time.Time `json:"-"`
