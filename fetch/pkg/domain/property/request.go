@@ -45,7 +45,7 @@ func MakeRequest(location bool, origin string, query map[string]interface{}) (ma
 	}
 
 	req.URL.RawQuery = q.Encode()
-	logrus.Infof("Requisição da pagina '%s", req.URL)
+	logrus.Debugf("Requisição da pagina '%s", req.URL)
 
 	// Headers
 	headers := makeHeaders(origin)
