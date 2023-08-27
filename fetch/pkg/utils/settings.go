@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var envVariables = []string{"DEBUG", "max_page", "force_update", "MODEL_HOST", "POSTGRES_HOST"}
+var envVariables = []string{"DEBUG", "force_update", "MODEL_HOST", "POSTGRES_HOST"}
 var postgresVariables = []string{"POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_DB", "POSTGRES_PORT"}
 
 func LoadSettings() {

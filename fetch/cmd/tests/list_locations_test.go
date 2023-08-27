@@ -10,7 +10,7 @@ import (
 
 func TestListLocations(t *testing.T) {
 	utils.LoadSettings()
-	locations, err := property.ListLocations("Tijuca", "neighborhood", "vivareal")
+	locations, _, err := property.ListLocations("Tijuca", "neighborhood", "vivareal")
 
 	if err != nil {
 		t.Error(err)
@@ -25,7 +25,7 @@ func TestListLocations(t *testing.T) {
 
 func TestListStreet(t *testing.T) {
 	utils.LoadSettings()
-	locations, err := property.ListLocations("Rua Barão", "street", "vivareal")
+	locations, _, err := property.ListLocations("Rua Barão", "street", "vivareal")
 
 	if err != nil {
 		t.Error(err)

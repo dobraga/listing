@@ -1,7 +1,6 @@
 package property
 
 import (
-	"fetch/pkg/database"
 	"fetch/pkg/models"
 	"fetch/pkg/utils"
 	"fmt"
@@ -10,26 +9,18 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func StoreFetchProperties(config models.SearchConfig, maxPage int) error {
-	properties, err := FetchProperties(config, maxPage)
-	if err != nil {
-		return err
-	}
-
-	return database.StoreProperty(config, properties)
-}
-
-func FetchProperties(config models.SearchConfig, maxPage int) ([]models.Property, error) {
+func FetchProperties(config models.SearchConfig) ([]models.Property, int, error) {
 	log.Infof("Searching listings from %+v", config)
 	var properties []models.Property
 	size := 24
 	query := createQuery(config, size)
 
-	qtdListings, err := qtdListings(config, query)
+	qtdListings, status_code, err := qtdListings(config, query)
 	if err != nil {
-		return properties, err
+		return properties, status_code, err
 	}
 	total_pages := int(qtdListings / size)
+	maxPage := config.MaxPages
 	if maxPage < 0 {
 		maxPage = total_pages
 	} else {
@@ -41,7 +32,7 @@ func FetchProperties(config models.SearchConfig, maxPage int) ([]models.Property
 		log.Debugf("Getting page %d from '%s'", page, config.Origin)
 		query["from"] = page * query["size"].(int)
 
-		data, err := MakeRequest(false, config.Origin, query)
+		data, _, err := MakeRequest(false, config.Origin, query)
 		if err != nil {
 			log.Error(err)
 			continue
@@ -62,14 +53,14 @@ func FetchProperties(config models.SearchConfig, maxPage int) ([]models.Property
 		}
 	}
 
-	return properties, err
+	return properties, status_code, err
 }
 
-func qtdListings(config models.SearchConfig, query map[string]interface{}) (int, error) {
-	data, err := MakeRequest(false, config.Origin, query)
+func qtdListings(config models.SearchConfig, query map[string]interface{}) (int, int, error) {
+	data, status_code, err := MakeRequest(false, config.Origin, query)
 	if err != nil {
 		log.Error(err)
-		return 0, err
+		return 0, status_code, err
 	}
 
 	if utils.Contains(utils.GetKeys(data), "nearby") {
@@ -79,12 +70,12 @@ func qtdListings(config models.SearchConfig, query map[string]interface{}) (int,
 	if !utils.Contains(utils.GetKeys(data), "search") {
 		err := fmt.Errorf("not found search listings '%v' from '%s' '%v'", data, config.Origin, query)
 		log.Error(err)
-		return 0, err
+		return 0, 500, err
 	}
 
 	data = data["search"].(map[string]interface{})
 	qtd := data["totalCount"]
-	return int(qtd.(float64)), nil
+	return int(qtd.(float64)), 200, nil
 }
 
 func createQuery(config models.SearchConfig, size int) map[string]interface{} {
@@ -113,3 +104,24 @@ func createQuery(config models.SearchConfig, size int) map[string]interface{} {
 
 	return data
 }
+
+// func unique(sample []models.Property) []models.Property {
+// 	var unique []models.Property
+// 	type key struct{ value1, value2 string }
+
+// 	m := make(map[key]int)
+// 	for _, v := range sample {
+// 		k := key{v.Url, v.BusinessType}
+// 		if i, ok := m[k]; ok {
+// 			// Overwrite previous value per requirement in
+// 			// question to keep last matching value.
+// 			unique[i] = v
+// 		} else {
+// 			// Unique key found. Record position and collect
+// 			// in result.
+// 			m[k] = len(unique)
+// 			unique = append(unique, v)
+// 		}
+// 	}
+// 	return unique
+// }

@@ -22,7 +22,7 @@ var client http.Client = http.Client{}
 // Returns:
 // - map[string]interface{}: the response data as a map.
 // - error: an error if the request fails.
-func MakeRequest(location bool, origin string, query map[string]interface{}) (map[string]interface{}, error) {
+func MakeRequest(location bool, origin string, query map[string]interface{}) (map[string]interface{}, int, error) {
 	var url string
 	var err error
 
@@ -35,7 +35,7 @@ func MakeRequest(location bool, origin string, query map[string]interface{}) (ma
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("erro na requisição da página '%s': %v", url, err)
+		return nil, 500, fmt.Errorf("erro na requisição da página '%s': %v", url, err)
 	}
 
 	// Query String
@@ -56,33 +56,33 @@ func MakeRequest(location bool, origin string, query map[string]interface{}) (ma
 	// Request
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("erro na requisição da página '%v': %v", req.URL, err)
+		return nil, 500, fmt.Errorf("erro na requisição da página '%v': %v", req.URL, err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("erro na requisição da página '%v': status code %v", req.URL, resp.StatusCode)
+		return nil, resp.StatusCode, fmt.Errorf("erro na requisição da página '%v': status code %v", req.URL, resp.StatusCode)
 	}
 
 	// Response to interface
 	bytesData, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("erro no parse da página '%v': %v", req.URL, err)
+		return nil, 500, fmt.Errorf("erro no parse da página '%v': %v", req.URL, err)
 	}
 
 	// Bytes to map
 	data := map[string]interface{}{}
 	err = json.Unmarshal(bytesData, &data)
 	if err != nil {
-		return nil, fmt.Errorf("erro no parse da página '%v': %v", req.URL, err)
+		return nil, 500, fmt.Errorf("erro no parse da página '%v': %v", req.URL, err)
 	}
 
 	erro_value, ok := data["err"]
 	if ok {
-		return nil, fmt.Errorf("erro na requisição da página '%v': %v", req.URL, erro_value)
+		return nil, 500, fmt.Errorf("erro na requisição da página '%v': %v", req.URL, erro_value)
 	}
 
-	return data, nil
+	return data, 200, nil
 }
 
 func makeHeaders(origin string) map[string]string {

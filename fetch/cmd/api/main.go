@@ -3,6 +3,8 @@ package main
 import (
 	"fetch/pkg/controller/routes"
 	"fetch/pkg/database"
+
+	// "fetch/pkg/domain/station"
 	"fetch/pkg/utils"
 
 	"github.com/gin-gonic/gin"
@@ -12,9 +14,16 @@ import (
 
 func main() {
 	utils.LoadSettings()
-	database.AutoMigrate()
+	db, err := database.Connect()
+	if err != nil {
+		panic(err)
+	}
+	err = db.AutoMigrate()
+	if err != nil {
+		panic(err)
+	}
 
-	// err := station.CheckExistsExtractCreate()
+	// err := station.CheckExistsExtractCreate(db)
 	// if err != nil {
 	// 	panic(err)
 	// }

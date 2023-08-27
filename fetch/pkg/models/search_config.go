@@ -11,15 +11,21 @@ var businessTypeValues = map[string]bool{"RENTAL": true, "SALE": true}
 var listingTypeValues = map[string]bool{"DEVELOPMENT": true, "USED": true}
 
 type SearchConfig struct {
-	Local        Local  `json:"local"`
-	BusinessType string `json:"businessType"`
-	ListingType  string `json:"listingType"`
-	Origin       string `json:"origin"`
-	DropImages   bool   `json:"dropImages"`
+	Local         Local  `json:"local"`
+	BusinessType  string `json:"businessType"`
+	ListingType   string `json:"listingType"`
+	Origin        string `json:"origin"`
+	DropImages    bool   `json:"dropImages"`
+	NotPredict    bool   `json:"notPredict"`
+	StoreProperty bool   `json:"storeProperty"`
+	MaxPages      int    `json:"maxPages"`
 }
 
 func (s *SearchConfig) ExtractFromContext(c *gin.Context) {
 	dropImages, _ := strconv.ParseBool(c.DefaultQuery("dropImages", "false"))
+	notPredict, _ := strconv.ParseBool(c.DefaultQuery("notPredict", "false"))
+	storeProperty, _ := strconv.ParseBool(c.DefaultQuery("storeProperty", "true"))
+	maxPages, _ := strconv.Atoi(c.DefaultQuery("maxPages", "50"))
 	s.Local = Local{
 		City:         c.Query("city"),
 		Zone:         c.Query("zone"),
@@ -31,6 +37,9 @@ func (s *SearchConfig) ExtractFromContext(c *gin.Context) {
 	s.BusinessType = c.Query("business_type")
 	s.ListingType = c.Query("listing_type")
 	s.DropImages = dropImages
+	s.NotPredict = notPredict
+	s.MaxPages = maxPages
+	s.StoreProperty = storeProperty
 
 	addressStreet := c.Query("addressStreet")
 	if addressStreet != "" {

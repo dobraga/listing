@@ -6,7 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func CheckExistsExtractCreate() error {
+func CheckExistsExtractCreate(db database.Database) error {
 	transportSystems := GetTransportSystems()
 	stations, errs := FetchStations(transportSystems)
 	logrus.Infof("Extracted %d stations", len(stations))
@@ -15,5 +15,5 @@ func CheckExistsExtractCreate() error {
 		logrus.Errorf("occurs %d errors: %v", len(errs), errs)
 	}
 
-	return database.StoreStations(stations)
+	return db.StoreStations(stations)
 }

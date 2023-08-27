@@ -2,7 +2,6 @@ package database
 
 import (
 	"fmt"
-	"log"
 
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
@@ -11,7 +10,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func Connect() *gorm.DB {
+func Connect() (Database, error) {
+	var DB Database
 	var db *gorm.DB
 	var err error
 
@@ -31,8 +31,15 @@ func Connect() *gorm.DB {
 	}
 
 	if err != nil {
-		log.Fatal(err)
+		return DB, err
 	}
 
-	return db
+	sqlDB, err := db.DB()
+	if err != nil {
+		return DB, err
+	}
+
+	database := Database{db, sqlDB}
+
+	return database, database.Ping()
 }

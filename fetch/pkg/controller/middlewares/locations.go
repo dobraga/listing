@@ -4,6 +4,7 @@ import (
 	"fetch/pkg/domain/property"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 func ListLocation(c *gin.Context) {
@@ -17,10 +18,11 @@ func ListLocation(c *gin.Context) {
 		c.JSON(400, "need a non empty string into 'location' or 'q'")
 		return
 	}
-	locations, err := property.ListLocations(location, type_location, "vivareal")
+	locations, status_code, err := property.ListLocations(location, type_location, "vivareal")
 
 	if err != nil {
-		c.JSON(500, err)
+		logrus.Error(err)
+		c.JSON(status_code, err)
 		return
 	} else {
 		c.JSON(200, locations)
