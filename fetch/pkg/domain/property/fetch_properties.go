@@ -10,23 +10,23 @@ import (
 )
 
 func FetchProperties(config models.SearchConfig) ([]models.Property, int, error) {
-	log.Infof("Searching listings from %+v", config)
+	log.Infof("Searching listings from %s", config.String())
 	var properties []models.Property
 	size := 24
 	query := createQuery(config, size)
 
-	qtdListings, status_code, err := qtdListings(config, query)
+	qtd_listings, status_code, err := qtdListings(config, query)
 	if err != nil {
 		return properties, status_code, err
 	}
-	total_pages := int(qtdListings / size)
+	total_pages := int(qtd_listings / size)
 	maxPage := config.MaxPages
 	if maxPage < 0 {
 		maxPage = total_pages
 	} else {
 		maxPage = utils.Min(maxPage, total_pages)
 	}
-	log.Infof("Getting %d/%d pages with %d total listings from '%s'", maxPage, total_pages, qtdListings, config.Origin)
+	log.Infof("Getting %d/%d pages with %d total listings from '%s'", maxPage, total_pages, qtd_listings, config.Origin)
 
 	for page := 0; page <= maxPage; page++ {
 		log.Debugf("Getting page %d from '%s'", page, config.Origin)

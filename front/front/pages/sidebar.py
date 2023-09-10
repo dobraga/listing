@@ -284,39 +284,55 @@ def init_app(app: Dash, settings: dict) -> Dash:
         r.raise_for_status()
 
         query = f"""
-        SELECT business_type,
-               origin,
-               url,
-               title,
-               usable_area,
-               unit_types,
-               bedrooms,
-               bathrooms,
-               suites,
-               parking_spaces,
+        WITH latlon AS (
+            SELECT state_acronym,
+                   neighborhood,
+                   street,
+                   AVG(lat) AS lat,
+                   AVG(lon) AS lon
+              FROM properties
+             WHERE street IS NOT NULL
+               AND city = '{selected_location['city']}'
+               AND neighborhood = '{selected_location['neighborhood']}'
+               AND state = '{selected_location['state']}'
+               AND state_acronym = '{selected_location['stateAcronym']}'
+               AND lat != 0
+               AND lon != 0
+          GROUP BY 1, 2, 3
+        )
+        SELECT properties.business_type,
+               properties.origin,
+               properties.url,
+               properties.title,
+               properties.usable_area,
+               properties.unit_types,
+               properties.bedrooms,
+               properties.bathrooms,
+               properties.suites,
+               properties.parking_spaces,
 
-               street,
-               street_number,
-               lat,
-               lon,
+               properties.street,
+               properties.street_number,
+               CASE WHEN properties.lat != 0 THEN properties.lat ELSE COALESCE(latlon.lat, 0) END AS lat,
+               CASE WHEN properties.lon != 0 THEN properties.lon ELSE COALESCE(latlon.lon, 0) END AS lon,
 
                price,
                condo_fee,
                (price + condo_fee)           AS total_fee,
                ROUND(predict_total_price, 2) AS total_fee_predict,
 
-               images,
-               amenities
-        FROM properties
-        WHERE
-            business_type = '{business_type}'
-            AND listing_type = '{listing_type}'
-            AND city = '{selected_location['city']}'
-            AND neighborhood = '{selected_location['neighborhood']}'
-            AND state = '{selected_location['state']}'
-            AND state_acronym = '{selected_location['stateAcronym']}'
-            AND zone = '{selected_location['zone']}'
-            AND active
+               properties.images,
+               properties.amenities,
+               properties.created_date
+          FROM properties
+     LEFT JOIN latlon USING (state_acronym, neighborhood, street)
+         WHERE properties.business_type = '{business_type}'
+           AND properties.listing_type = '{listing_type}'
+           AND properties.city = '{selected_location['city']}'
+           AND properties.neighborhood = '{selected_location['neighborhood']}'
+           AND properties.state = '{selected_location['state']}'
+           AND properties.state_acronym = '{selected_location['stateAcronym']}'
+           AND properties.active
         """
         LOG.info("Running query: '%s'", query)
         df = pd.read_sql_query(query, engine)

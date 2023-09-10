@@ -11,20 +11,39 @@ var businessTypeValues = map[string]bool{"RENTAL": true, "SALE": true}
 var listingTypeValues = map[string]bool{"DEVELOPMENT": true, "USED": true}
 
 type SearchConfig struct {
-	Local         Local  `json:"local"`
-	BusinessType  string `json:"businessType"`
-	ListingType   string `json:"listingType"`
-	Origin        string `json:"origin"`
-	DropImages    bool   `json:"dropImages"`
-	NotPredict    bool   `json:"notPredict"`
-	StoreProperty bool   `json:"storeProperty"`
-	MaxPages      int    `json:"maxPages"`
+	Local          Local  `json:"local"`
+	BusinessType   string `json:"businessType"`
+	ListingType    string `json:"listingType"`
+	Origin         string `json:"origin"`
+	DropImages     bool   `json:"dropImages"`
+	NotPredict     bool   `json:"notPredict"`
+	StoreProperty  bool   `json:"storeProperty"`
+	MaxPages       int    `json:"maxPages"`
+	ReturnListings bool   `json:"returnListings"`
+}
+
+func (s *SearchConfig) String() string {
+	street := ""
+	if s.Local.AddressStreet != "" {
+		street = fmt.Sprintf("Street: %s,", s.Local.AddressStreet)
+	}
+
+	origin := ""
+	if s.Local.AddressStreet != "" {
+		origin = fmt.Sprintf("Origin: %s,", s.Origin)
+	}
+
+	return fmt.Sprintf(
+		"%s%sNeighborhood: '%s', City: '%s', State: '%s', BusinessType: '%s', ListingType: '%s'",
+		origin, street, s.Local.Neighborhood, s.Local.City, s.Local.State,
+		s.BusinessType, s.ListingType)
 }
 
 func (s *SearchConfig) ExtractFromContext(c *gin.Context) {
 	dropImages, _ := strconv.ParseBool(c.DefaultQuery("dropImages", "false"))
 	notPredict, _ := strconv.ParseBool(c.DefaultQuery("notPredict", "false"))
 	storeProperty, _ := strconv.ParseBool(c.DefaultQuery("storeProperty", "true"))
+	returnListings, _ := strconv.ParseBool(c.DefaultQuery("ReturnListings", "true"))
 	maxPages, _ := strconv.Atoi(c.DefaultQuery("maxPages", "50"))
 	s.Local = Local{
 		City:         c.Query("city"),
@@ -40,6 +59,7 @@ func (s *SearchConfig) ExtractFromContext(c *gin.Context) {
 	s.NotPredict = notPredict
 	s.MaxPages = maxPages
 	s.StoreProperty = storeProperty
+	s.ReturnListings = returnListings
 
 	addressStreet := c.Query("addressStreet")
 	if addressStreet != "" {

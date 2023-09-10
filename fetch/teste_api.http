@@ -1,9 +1,9 @@
-http://localhost:6000/locations?q=barra da tijuca
+http://localhost:5000/locations?q=barra da tijuca
 
 
 
 ### error example
-http://localhost:6000/listings?
+http://localhost:5000/listings?
 
 
 

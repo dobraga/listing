@@ -14,4 +14,4 @@ COPY model/requirements.txt ./
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD uvicorn --host 0.0.0.0 --port $MODEL_PORT "api:app"
+CMD uvicorn --host 0.0.0.0 --port $MODEL_PORT "api:app" --log-level warning

@@ -26,6 +26,10 @@ func MakeRequest(location bool, origin string, query map[string]interface{}) (ma
 	var url string
 	var err error
 
+	if origin == "" {
+		return nil, 500, fmt.Errorf("origin cannot be empty")
+	}
+
 	siteInfo := viper.Get("sites").(map[string]interface{})[origin].(map[string]interface{})
 	if location {
 		url = fmt.Sprintf("https://%s/v3/locations", siteInfo["api"])

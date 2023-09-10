@@ -23,27 +23,17 @@ services:
             start_period: 1s
 
     fetch:
-        hostname: fetch
-        build:
-            dockerfile: ./fetch/Dockerfile
-        restart: always
+        image: cosmtrek/air
+        working_dir: /app
         env_file:
             - ./.env
         ports:
             - ${BACKEND_PORT}:${BACKEND_PORT}
-        networks:
-            - network
-        healthcheck:
-            test: ["CMD-SHELL", "curl", "http://fetch:${BACKEND_PORT}/health"]
-            interval: 10s
-            retries: 5
-            start_period: 1s
-            timeout: 3s
+        volumes:
+            - ./fetch/:/app/
         depends_on:
             db:
                 condition: service_healthy
-            # model:
-            #     condition: service_healthy
 
     front:
         build:

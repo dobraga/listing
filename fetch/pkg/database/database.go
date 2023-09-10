@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fetch/pkg/models"
+	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
@@ -31,22 +32,38 @@ func (db *Database) AutoMigrate() error {
 	return db.db.AutoMigrate(&models.Station{})
 }
 
-func (db *Database) ResetActive(location models.SearchConfig) error {
+func (db *Database) GetLastUpdate(config models.SearchConfig) (time.Time, error) {
+	var lastUpdate time.Time
+
+	result := db.db.Model(&models.Property{}).Where(
+		"neighborhood = ? AND city = ? AND state = ? AND business_type = ? AND listing_type = ?",
+		config.Local.Neighborhood,
+		config.Local.City,
+		config.Local.State,
+		config.BusinessType,
+		config.ListingType).Select("MAX(updated_date)").Row()
+
+	err := result.Scan(&lastUpdate)
+
+	return lastUpdate, err
+}
+
+func (db *Database) ResetActive(config models.SearchConfig) error {
 	logrus.Debugf(
 		"Reset active properties -> neighborhood = '%s' AND city = '%s' AND state = '%s' business_type = '%s' AND listing_type = '%s'",
-		location.Local.Neighborhood,
-		location.Local.City,
-		location.Local.State,
-		location.BusinessType,
-		location.ListingType)
+		config.Local.Neighborhood,
+		config.Local.City,
+		config.Local.State,
+		config.BusinessType,
+		config.ListingType)
 
 	tx := db.db.Model(&models.Property{}).Where(
 		"neighborhood = ? AND city = ? AND state = ? AND business_type = ? AND listing_type = ?",
-		location.Local.Neighborhood,
-		location.Local.City,
-		location.Local.State,
-		location.BusinessType,
-		location.ListingType).Update("Active", false)
+		config.Local.Neighborhood,
+		config.Local.City,
+		config.Local.State,
+		config.BusinessType,
+		config.ListingType).Update("Active", false)
 
 	return tx.Error
 }

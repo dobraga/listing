@@ -31,6 +31,6 @@ LOG = logging.getLogger(__name__)
 
 
 ENV_VARIABLES = ['BACKEND_HOST', 'POSTGRES_HOST',
-                 'DEBUG', 'max_page', 'force_update']
+                 'DEBUG', 'force_update']
 POSTGRES_VARIABLES = ['POSTGRES_USER', 'POSTGRES_PASSWORD',
                       'POSTGRES_DB', 'POSTGRES_PORT']

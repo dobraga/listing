@@ -10,6 +10,7 @@ layout = DataTable(
     columns=[
         {"name": "Título", "id": "title", "type": "text", "presentation": "markdown"},
         {"name": "Área Útil", "id": "usable_area"},
+        {"name": "Created", "id": "created_date"},
         {"name": "Tipo", "id": "unit_types"},
         {"name": "Preço Total", "id": "total_fee"},
         {"name": "Preço Predito", "id": "total_fee_predict"},
@@ -27,6 +28,7 @@ layout = DataTable(
     style_cell_conditional=[
         {"if": {"column_id": "title"}, "maxWidth": 45, "textAlign": "left"},
         {"if": {"column_id": "usable_area"}, "maxWidth": 15},
+        {"if": {"column_id": "created_date"}, "maxWidth": 15},
         {"if": {"column_id": "unit_types"}, "maxWidth": 20, "textAlign": "left"},
         {"if": {"column_id": "total_fee"}, "maxWidth": 20},
         {"if": {"column_id": "total_fee_predict"}, "maxWidth": 20},
@@ -37,7 +39,7 @@ layout = DataTable(
 
 
 def init_app(app: Dash) -> Dash:
-    cols = ["title", "usable_area", "unit_types"]
+    cols = ["title", "usable_area", "created_date", "unit_types"]
     cols += ["total_fee", "total_fee_predict", "error", "fl_latlon"]
 
     @app.callback(
@@ -53,6 +55,9 @@ def init_app(app: Dash) -> Dash:
 
         if dff.shape[0] == 0:
             return [], 1
+
+        dff["created_date"] = dff["created_date"].astype("datetime64[D]")\
+            .astype(str)
 
         dff["error"] = (dff["total_fee"] - dff["total_fee_predict"]).round(0)
         dff["total_fee_predict"] = dff["total_fee_predict"].round(0)

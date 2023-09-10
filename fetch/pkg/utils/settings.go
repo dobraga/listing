@@ -33,7 +33,7 @@ func LoadSettings() {
 
 	log.Info(fmt.Sprintf("Utilizando '%s' env", env))
 
-	format := &log.JSONFormatter{}
+	format := &log.JSONFormatter{PrettyPrint: false}
 	log.SetFormatter(format)
 	log.SetReportCaller(true)
 
