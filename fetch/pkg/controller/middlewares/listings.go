@@ -15,6 +15,8 @@ import (
 )
 
 func StoreListings(c *gin.Context) {
+	loc, _ := time.LoadLocation("America/Sao_Paulo")
+
 	var all_properties []models.Property
 	var statusCode int
 	db, err := database.Connect()
@@ -39,11 +41,16 @@ func StoreListings(c *gin.Context) {
 	if config.StoreProperty {
 		lastUpdate, err := db.GetLastUpdate(config)
 		if err == nil {
-			now := time.Now()
-			log.Infof("Last update: %s", lastUpdate.Format(time.RFC3339))
+			lastUpdate = lastUpdate.In(loc)
+			now := time.Now().In(loc)
+			lastUpdateHrs := now.Sub(lastUpdate).Hours()
 
-			if lastUpdate.Day() == now.Day() && lastUpdate.Month() == now.Month() && lastUpdate.Year() == now.Year() {
-				c.JSON(200, "already updated at"+lastUpdate.Format(time.RFC3339))
+			info := fmt.Sprintf("Last update %f hours ago: %s",
+				lastUpdateHrs, lastUpdate.Format(time.RFC3339))
+
+			log.Infof(info)
+			if lastUpdateHrs <= 3 {
+				c.JSON(200, info)
 				return
 			}
 		} else {
