@@ -3,35 +3,34 @@ package model
 import (
 	"bytes"
 	"encoding/json"
+	"fetch/pkg/database"
 	"fetch/pkg/models"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strings"
 
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
-func Predict(p models.Property) (models.Property, error) {
-	one := []models.Property{p}
-	data := map[string][]models.Property{"data": one}
+func Predict(db database.Database, properties *[]models.Property) error {
+	data := map[string]*[]models.Property{"data": properties}
 
 	body, err := json.Marshal(data)
 	if err != nil {
 		fmt.Printf("Error: %s", err)
-		return p, err
+		return err
 	}
 
-	url := fmt.Sprintf(
-		"http://%s:%s/%s", viper.GetString("MODEL_HOST"),
-		viper.GetString("MODEL_PORT"), strings.ToLower(p.BusinessType))
+	url := fmt.Sprintf("http://%s:%s/predict",
+		viper.GetString("MODEL_HOST"), viper.GetString("MODEL_PORT"))
 
 	log.Debugf("Getting '%s' in  '%s'", body, url)
 
 	r, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	if err != nil {
-		return p, err
+		return err
 	}
 
 	r.Header.Add("Content-Type", "application/json")
@@ -48,7 +47,10 @@ func Predict(p models.Property) (models.Property, error) {
 	resBody, _ := ioutil.ReadAll(res.Body)
 	json.Unmarshal(resBody, &response)
 
-	p.PredictTotalPrice = response[0]
+	for i := range *properties {
+		logrus.Debugf("Update predicted %f for %s", response[i], (*properties)[i].Url)
+		(*properties)[i].PredictPrice = response[i]
+	}
 
-	return p, nil
+	return nil
 }

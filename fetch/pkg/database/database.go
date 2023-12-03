@@ -12,7 +12,7 @@ import (
 )
 
 type Database struct {
-	db    *gorm.DB
+	DB    *gorm.DB
 	dbSQL *sql.DB
 }
 
@@ -25,18 +25,31 @@ func (db *Database) Close() {
 }
 
 func (db *Database) AutoMigrate() error {
-	err := db.db.AutoMigrate(&models.Property{})
+	err := db.DB.AutoMigrate(&models.Property{})
 	if err != nil {
 		return err
 	}
-	return db.db.AutoMigrate(&models.Station{})
+	return db.DB.AutoMigrate(&models.Station{})
+}
+
+func (db *Database) Where(config models.SearchConfig) ([]models.Property, error) {
+	var properties []models.Property
+	err := db.DB.Where("active = ? AND neighborhood = ? AND city = ? AND state = ? AND business_type = ? AND listing_type = ?",
+		true,
+		config.Local.Neighborhood,
+		config.Local.City,
+		config.Local.State,
+		config.BusinessType,
+		config.ListingType).Find(&properties).Error
+
+	return properties, err
 }
 
 func (db *Database) GetLastUpdate(config models.SearchConfig) (time.Time, error) {
 	var lastUpdate time.Time
 
-	result := db.db.Model(&models.Property{}).Where(
-		"neighborhood = ? AND city = ? AND state = ? AND business_type = ? AND listing_type = ?",
+	result := db.DB.Model(&models.Property{}).Where(
+		"neighborhood = ? AND city = ? AND state = ? AND business_type = ? AND listing_type = ? AND active",
 		config.Local.Neighborhood,
 		config.Local.City,
 		config.Local.State,
@@ -57,7 +70,7 @@ func (db *Database) ResetActive(config models.SearchConfig) error {
 		config.BusinessType,
 		config.ListingType)
 
-	tx := db.db.Model(&models.Property{}).Where(
+	tx := db.DB.Model(&models.Property{}).Where(
 		"neighborhood = ? AND city = ? AND state = ? AND business_type = ? AND listing_type = ?",
 		config.Local.Neighborhood,
 		config.Local.City,
@@ -70,10 +83,10 @@ func (db *Database) ResetActive(config models.SearchConfig) error {
 
 func (db *Database) StoreProperty(config models.SearchConfig, properties []models.Property) error {
 	logrus.Infof("Inserting %d properties from to database", len(properties))
-	result := db.db.Clauses(clause.OnConflict{UpdateAll: true}).CreateInBatches(properties, 1)
+	result := db.DB.Clauses(clause.OnConflict{UpdateAll: true}).CreateInBatches(properties, 1)
 	return result.Error
 }
 
 func (db *Database) StoreStations(stations []models.Station) error {
-	return db.db.Clauses(clause.OnConflict{UpdateAll: true}).CreateInBatches(stations, 50).Error
+	return db.DB.Clauses(clause.OnConflict{UpdateAll: true}).CreateInBatches(stations, 50).Error
 }

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -11,15 +12,13 @@ var businessTypeValues = map[string]bool{"RENTAL": true, "SALE": true}
 var listingTypeValues = map[string]bool{"DEVELOPMENT": true, "USED": true}
 
 type SearchConfig struct {
-	Local          Local  `json:"local"`
-	BusinessType   string `json:"businessType"`
-	ListingType    string `json:"listingType"`
-	Origin         string `json:"origin"`
-	DropImages     bool   `json:"dropImages"`
-	NotPredict     bool   `json:"notPredict"`
-	StoreProperty  bool   `json:"storeProperty"`
-	MaxPages       int    `json:"maxPages"`
-	ReturnListings bool   `json:"returnListings"`
+	Local            Local  `json:"local"`
+	BusinessType     string `json:"businessType"`
+	ListingType      string `json:"listingType"`
+	Origin           string `json:"origin"`
+	DropImages       bool   `json:"dropImages"`
+	MaxPages         int    `json:"maxPages"`
+	ReturnProperties bool   `json:"returnProperties"`
 }
 
 func (s *SearchConfig) String() string {
@@ -41,10 +40,9 @@ func (s *SearchConfig) String() string {
 
 func (s *SearchConfig) ExtractFromContext(c *gin.Context) {
 	dropImages, _ := strconv.ParseBool(c.DefaultQuery("dropImages", "false"))
-	notPredict, _ := strconv.ParseBool(c.DefaultQuery("notPredict", "false"))
-	storeProperty, _ := strconv.ParseBool(c.DefaultQuery("storeProperty", "true"))
-	returnListings, _ := strconv.ParseBool(c.DefaultQuery("ReturnListings", "true"))
-	maxPages, _ := strconv.Atoi(c.DefaultQuery("maxPages", "50"))
+	maxPages, _ := strconv.Atoi(c.DefaultQuery("maxPages", "100"))
+	returnProperties, _ := strconv.ParseBool(c.DefaultQuery("ReturnProperties", "false"))
+
 	s.Local = Local{
 		City:         c.Query("city"),
 		Zone:         c.Query("zone"),
@@ -56,10 +54,8 @@ func (s *SearchConfig) ExtractFromContext(c *gin.Context) {
 	s.BusinessType = c.Query("business_type")
 	s.ListingType = c.Query("listing_type")
 	s.DropImages = dropImages
-	s.NotPredict = notPredict
 	s.MaxPages = maxPages
-	s.StoreProperty = storeProperty
-	s.ReturnListings = returnListings
+	s.ReturnProperties = returnProperties
 
 	addressStreet := c.Query("addressStreet")
 	if addressStreet != "" {
@@ -123,6 +119,10 @@ func (l *SearchConfig) Validation() []error {
 	// 	err = fmt.Errorf("sites need a %v but received '%s'", sites, l.Origin)
 	// 	errs = append(errs, err)
 	// }
+
+	if len(errs) > 0 {
+		err = errors.Join(errs...)
+	}
 
 	return errs
 }

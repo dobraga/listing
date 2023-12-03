@@ -29,7 +29,7 @@ func main() {
 	// }
 
 	r := gin.Default()
-	routes.InitRoutes(&r.RouterGroup)
+	routes.InitRoutes(&r.RouterGroup, db)
 
 	port := viper.GetString("BACKEND_PORT")
 	logrus.Infof("Started server on port %s", port)

@@ -24,8 +24,6 @@ func ListLocation(c *gin.Context) {
 		logrus.Error(err)
 		c.JSON(status_code, err)
 		return
-	} else {
-		c.JSON(200, locations)
-		return
 	}
+	c.JSON(200, locations)
 }
