@@ -20,6 +20,7 @@ depara_tp_listings = [
     {"label": "Usado", "value": "USED"},
     {"label": "Novo", "value": "DEVELOPMENT"},
 ]
+unit_types = []
 
 
 def min_max(values: pd.Series, plus=0):
@@ -110,41 +111,62 @@ layout = html.Div(
                     html.Hr(),
                     html.Div(
                         [
-                            dbc.Label("Faixa de Preço"),
-                            html.Div(
-                                [
-                                    dcc.Input(
-                                        id="preco_min",
-                                        type="number",
-                                        step=100,
-                                    ),
-                                    dcc.Input(
-                                        id="preco_max",
-                                        type="number",
-                                        step=100,
-                                    ),
-                                ]
-                            ),
-                            html.Br(),
-                            dbc.Label("Quantidade de quartos"),
-                            html.Div(
-                                [
-                                    dcc.Input(
-                                        id="quarto_min",
-                                        type="number",
-                                    ),
-                                    dcc.Input(
-                                        id="quarto_max",
-                                        type="number",
-                                    ),
-                                ]
-                            ),
-                            html.Br(),
                             dbc.Button(
                                 "Filtra Imóveis",
                                 color="primary",
                                 id="filter_imoveis",
                             ),
+
+                            html.Br(),
+
+                            html.Div([
+                                dbc.Label("Faixa de Preço"),
+                                html.Div(
+                                    [
+                                        dcc.Input(
+                                            id="preco_min",
+                                            type="number",
+                                            step=100,
+                                        ),
+                                        dcc.Input(
+                                            id="preco_max",
+                                            type="number",
+                                            step=100,
+                                        ),
+                                    ]
+                                ),
+                            ]),
+
+                            html.Br(),
+
+                            html.Div([
+                                dbc.Label("Quantidade de quartos"),
+                                html.Div(
+                                    [
+                                        dcc.Input(
+                                            id="quarto_min",
+                                            type="number",
+                                        ),
+                                        dcc.Input(
+                                            id="quarto_max",
+                                            type="number",
+                                        ),
+                                    ]
+                                ),
+                            ]),
+
+                            html.Br(),
+
+                            html.Div([
+                                dbc.Label("Tipo da Propriedade"),
+                                dcc.Dropdown(
+                                    options=[],
+                                    value=[],
+                                    id="unit_types",
+                                    multi=True,
+                                ),
+                            ]),
+
                         ]
                     ),
                 ]
@@ -237,6 +259,8 @@ def init_app(app: Dash, settings: dict) -> Dash:
         Output("quarto_max", "value"),
         Output("quarto_max", "min"),
         Output("quarto_max", "max"),
+        Output("unit_types", "options"),
+        Output("unit_types", "value"),
         Input("search_imoveis", "n_clicks"),
         State("locations", "data"),
         State("select_local", "value"),
@@ -318,8 +342,8 @@ def init_app(app: Dash, settings: dict) -> Dash:
 
                price,
                condo_fee,
-               (price + condo_fee)           AS total_fee,
-               ROUND(predict_total_price, 2) AS total_fee_predict,
+               (price + condo_fee) AS total_fee,
+               predict_price       AS total_fee_predict,
 
                properties.images,
                properties.amenities,
@@ -337,28 +361,20 @@ def init_app(app: Dash, settings: dict) -> Dash:
         LOG.info("Running query: '%s'", query)
         df = pd.read_sql_query(query, engine)
         if df.empty:
-            return df.to_dict("records"), True, *[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            return df.to_dict("records"), True, *[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, [], []]
+
+        global unit_types
+        unit_types = [{"label": u, "value": i}
+                      for i, u in enumerate(df.unit_types.unique().tolist())]
+        unit_types_values = [u['value'] for u in unit_types]
 
         return (
             df.to_dict("records"),
             True,
             *min_max(df.total_fee, 500),
             *min_max(df.bedrooms, 1),
-        )
-
-    @app.callback(
-        Output("filter_description", "children"),
-        Input("preco_min", "value"),
-        Input("preco_max", "value"),
-        Input("quarto_min", "value"),
-        Input("quarto_max", "value"),
-    )
-    def describe_filter(*args):
-        if [arg for arg in args if arg is None]:
-            raise PreventUpdate
-
-        return "Selecionado imóveis com valores entre [{},{}] e que possuam a quantidade [{},{}] de quartos".format(
-            *args
+            unit_types,
+            unit_types_values,
         )
 
     @app.callback(
@@ -369,18 +385,23 @@ def init_app(app: Dash, settings: dict) -> Dash:
         State("preco_max", "value"),
         State("quarto_min", "value"),
         State("quarto_max", "value"),
+        Input("unit_types", "value"),
     )
-    def filter_data(n_clicks, data, preco_min, preco_max, quarto_min, quarto_max):
+    def filter_data(n_clicks, data, preco_min, preco_max, quarto_min, quarto_max, sel_unit_types_code):
         if n_clicks is None and data is None:
             raise PreventUpdate
 
         df = pd.DataFrame(data)
+
+        sel_unit_types = [u['label']
+                          for u in unit_types if u['value'] in sel_unit_types_code]
 
         df = df[
             (df["total_fee"] >= preco_min)
             & (df["total_fee"] <= preco_max)
             & (df["bedrooms"] >= quarto_min)
             & (df["bedrooms"] <= quarto_max)
+            & (df["unit_types"].isin(sel_unit_types))
         ]
 
         return df.to_dict("records")

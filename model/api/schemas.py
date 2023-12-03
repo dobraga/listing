@@ -11,6 +11,9 @@ class Input(BaseModel):
     bedrooms: int
     unit_types: str
     neighborhood: str
+    condo_fee: float
+    price: float
+
 
 class Inputs(BaseModel):
     data: List[Input]
