@@ -33,7 +33,7 @@ func TestFetchProperties(t *testing.T) {
 		return
 	}
 
-	properties, _, errs := property.FetchProperties(location)
+	properties, errs := property.FetchProperties(location)
 	if errs != nil {
 		t.Errorf("%v", errs)
 		return
@@ -67,7 +67,7 @@ func TestFetchPropertiesStreet(t *testing.T) {
 		return
 	}
 
-	properties, _, errs := property.FetchProperties(location)
+	properties, errs := property.FetchProperties(location)
 	if errs != nil {
 		t.Errorf("%v", errs)
 		return

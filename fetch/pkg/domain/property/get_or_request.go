@@ -37,7 +37,7 @@ func Fetch(config models.SearchConfig, db database.Database) ([]models.Property,
 	if err != nil {
 		return properties, err
 	}
-	properties, err = getNewProperties(db, config)
+	properties, err = getNewProperties(config)
 	if err != nil {
 		db.ResetActive(config)
 		return properties, err
@@ -51,7 +51,7 @@ func Fetch(config models.SearchConfig, db database.Database) ([]models.Property,
 	return properties, db.StoreProperty(config, properties)
 }
 
-func getNewProperties(db database.Database, config models.SearchConfig) ([]models.Property, error) {
+func getNewProperties(config models.SearchConfig) ([]models.Property, error) {
 	var allProperties []models.Property
 	var errs []error
 
@@ -60,7 +60,6 @@ func getNewProperties(db database.Database, config models.SearchConfig) ([]model
 
 	wg := new(sync.WaitGroup)
 	channelErr := make(chan error)
-	channelStatusCode := make(chan int)
 
 	for _, origin := range todosSites {
 		wg.Add(1)
@@ -70,10 +69,9 @@ func getNewProperties(db database.Database, config models.SearchConfig) ([]model
 
 			c.Origin = o
 
-			properties, statusCode, err := FetchProperties(c)
+			properties, err := FetchProperties(c)
 			if err != nil {
 				channelErr <- err
-				channelStatusCode <- statusCode
 				return
 			}
 			allProperties = append(allProperties, properties...)

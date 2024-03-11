@@ -8,14 +8,14 @@ import (
 	"github.com/spf13/viper"
 )
 
-func ListLocations(local, type_location, origin string) ([]models.Local, int, error) {
+func ListLocations(local, type_location, origin string) ([]models.Local, error) {
 	logrus.Infof("Searching '%s' locations for type '%s'", local, type_location)
 	mapLocations := map[string]models.Local{}
 	finalLocations := []models.Local{}
 
 	sites := viper.Get("sites")
 	if sites == nil {
-		return nil, 400, errors.New("variável de sites vazia")
+		return nil, errors.New("variável de sites vazia")
 	}
 
 	siteInfo := sites.(map[string]interface{})[origin].(map[string]interface{})
@@ -27,9 +27,9 @@ func ListLocations(local, type_location, origin string) ([]models.Local, int, er
 		"includeFields": "address.city,address.zone,address.state,address.neighborhood,address.stateAcronym,address.street,address.locationId,address.point",
 	}
 
-	data, status_code, err := MakeRequest(true, origin, query)
+	data, err := MakeRequest(true, origin, query)
 	if err != nil {
-		return nil, status_code, err
+		return nil, err
 	}
 
 	// Interface to map and get listings
@@ -63,5 +63,5 @@ func ListLocations(local, type_location, origin string) ([]models.Local, int, er
 		finalLocations = append(finalLocations, sLocation)
 	}
 
-	return finalLocations, 200, nil
+	return finalLocations, nil
 }

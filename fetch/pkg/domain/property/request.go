@@ -3,7 +3,7 @@ package property
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/sirupsen/logrus"
@@ -22,12 +22,12 @@ var client http.Client = http.Client{}
 // Returns:
 // - map[string]interface{}: the response data as a map.
 // - error: an error if the request fails.
-func MakeRequest(location bool, origin string, query map[string]interface{}) (map[string]interface{}, int, error) {
+func MakeRequest(location bool, origin string, query map[string]interface{}) (map[string]interface{}, error) {
 	var url string
 	var err error
 
 	if origin == "" {
-		return nil, 500, fmt.Errorf("origin cannot be empty")
+		return nil, fmt.Errorf("origin cannot be empty")
 	}
 
 	siteInfo := viper.Get("sites").(map[string]interface{})[origin].(map[string]interface{})
@@ -37,70 +37,65 @@ func MakeRequest(location bool, origin string, query map[string]interface{}) (ma
 		url = fmt.Sprintf("https://%s/v2/listings", siteInfo["api"])
 	}
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := CreateRequestWithQueryHeaders(url, query)
 	if err != nil {
-		return nil, 500, fmt.Errorf("erro na requisição da página '%s': %v", url, err)
-	}
-
-	// Query String
-	q := req.URL.Query()
-	for key, element := range query {
-		q.Add(key, fmt.Sprintf("%v", element))
-	}
-
-	req.URL.RawQuery = q.Encode()
-	logrus.Debugf("Requisição da pagina '%s", req.URL)
-
-	// Headers
-	headers := makeHeaders(origin)
-	for key, element := range headers {
-		req.Header.Add(key, fmt.Sprintf("%v", element))
+		return nil, err
 	}
 
 	// Request
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, 500, fmt.Errorf("erro na requisição da página '%v': %v", req.URL, err)
+		return nil, fmt.Errorf("erro na requisição da página '%v': %v", req.URL, err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, resp.StatusCode, fmt.Errorf("erro na requisição da página '%v': status code %v", req.URL, resp.StatusCode)
+	// Response to interface
+	bytesData, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body for URL '%v': %v", req.URL, err)
 	}
 
-	// Response to interface
-	bytesData, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, 500, fmt.Errorf("erro no parse da página '%v': %v", req.URL, err)
+	// verify status code
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("erro na requisição da página '%v': status code %v, body: %s", req.URL, resp.StatusCode, string(bytesData))
 	}
 
 	// Bytes to map
 	data := map[string]interface{}{}
 	err = json.Unmarshal(bytesData, &data)
 	if err != nil {
-		return nil, 500, fmt.Errorf("erro no parse da página '%v': %v", req.URL, err)
+		return nil, fmt.Errorf("erro no parse da página '%v': %v", req.URL, err)
 	}
 
 	erro_value, ok := data["err"]
 	if ok {
-		return nil, 500, fmt.Errorf("erro na requisição da página '%v': %v", req.URL, erro_value)
+		return nil, fmt.Errorf("erro na requisição da página '%v': %v", req.URL, erro_value)
 	}
 
-	return data, 200, nil
+	return data, nil
 }
 
-func makeHeaders(origin string) map[string]string {
-	return map[string]string{
-		"user-agent":       "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36",
-		"accept-language":  "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-		"sec-fetch-site":   "same-site",
-		"accept":           "application/json",
-		"sec-fetch-dest":   "empty",
-		"sec-ch-ua-mobile": "?0",
-		"sec-fetch-mode":   "cors",
-		"origin-ua-mobile": "?0",
-		"referer":          fmt.Sprintf("https://www.%s.com.br", origin),
-		"origin":           fmt.Sprintf("https://www.%s.com.br", origin),
-		"x-domain":         fmt.Sprintf("www.%s.com.br", origin),
+func CreateRequestWithQueryHeaders(url string, query map[string]interface{}) (*http.Request, error) {
+	queryString := "?"
+	for key, element := range query {
+		queryString += fmt.Sprintf("%s=%v&", key, element)
 	}
+	url += queryString
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("erro na requisição da página '%s': %v", url, err)
+	}
+
+	//  add headers
+	headers := map[string]string{
+		"User-Agent": "Mozilla/5.0",
+	}
+	logrus.Infof("Using headers %v+", headers)
+	for key, element := range headers {
+		req.Header.Add(key, fmt.Sprintf("%v", element))
+	}
+	logrus.Infof("Requisição da pagina '%s", req.URL)
+
+	return req, nil
 }

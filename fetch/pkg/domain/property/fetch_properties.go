@@ -9,15 +9,15 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func FetchProperties(config models.SearchConfig) ([]models.Property, int, error) {
+func FetchProperties(config models.SearchConfig) ([]models.Property, error) {
 	log.Infof("Searching listings from %s", config.String())
 	var properties []models.Property
 	size := 24
 	query := createQuery(config, size)
 
-	qtd_listings, status_code, err := qtdListings(config, query)
+	qtd_listings, err := qtdListings(config, query)
 	if err != nil {
-		return properties, status_code, err
+		return properties, err
 	}
 	total_pages := int(qtd_listings / size)
 	maxPage := config.MaxPages
@@ -32,7 +32,7 @@ func FetchProperties(config models.SearchConfig) ([]models.Property, int, error)
 		log.Debugf("Getting page %d from '%s'", page, config.Origin)
 		query["from"] = page * query["size"].(int)
 
-		data, _, err := MakeRequest(false, config.Origin, query)
+		data, err := MakeRequest(false, config.Origin, query)
 		if err != nil {
 			log.Error(err)
 			continue
@@ -53,14 +53,14 @@ func FetchProperties(config models.SearchConfig) ([]models.Property, int, error)
 		}
 	}
 
-	return properties, status_code, err
+	return properties, err
 }
 
-func qtdListings(config models.SearchConfig, query map[string]interface{}) (int, int, error) {
-	data, status_code, err := MakeRequest(false, config.Origin, query)
+func qtdListings(config models.SearchConfig, query map[string]interface{}) (int, error) {
+	data, err := MakeRequest(false, config.Origin, query)
 	if err != nil {
 		log.Error(err)
-		return 0, status_code, err
+		return 0, err
 	}
 
 	if utils.Contains(utils.GetKeys(data), "nearby") {
@@ -70,12 +70,12 @@ func qtdListings(config models.SearchConfig, query map[string]interface{}) (int,
 	if !utils.Contains(utils.GetKeys(data), "search") {
 		err := fmt.Errorf("not found search listings '%v' from '%s' '%v'", data, config.Origin, query)
 		log.Error(err)
-		return 0, 500, err
+		return 0, err
 	}
 
 	data = data["search"].(map[string]interface{})
 	qtd := data["totalCount"]
-	return int(qtd.(float64)), 200, nil
+	return int(qtd.(float64)), nil
 }
 
 func createQuery(config models.SearchConfig, size int) map[string]interface{} {
