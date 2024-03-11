@@ -16,7 +16,7 @@ services:
         networks:
             - network
         healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U postgres"]
+            test: [ "CMD-SHELL", "pg_isready -U postgres" ]
             interval: 5s
             timeout: 5s
             retries: 5
@@ -34,16 +34,16 @@ services:
         networks:
             - network
         healthcheck:
-            test: ["CMD-SHELL", "curl", "http://fetch:${BACKEND_PORT}/health"]
-            interval: 10s
+            test: curl -sSf http://localhost:${BACKEND_PORT}/health
+            interval: 60s
             retries: 5
-            start_period: 1s
-            timeout: 3s
+            start_period: 5s
+            timeout: 1s
         depends_on:
             db:
                 condition: service_healthy
-            # model:
-            #     condition: service_healthy
+            model:
+                condition: service_healthy
 
     front:
         build:
@@ -58,10 +58,11 @@ services:
         depends_on:
             db:
                 condition: service_healthy
-            # fetch:
-            #     condition: service_healthy
+            fetch:
+                condition: service_healthy
 
     model:
+        hostname: model
         build:
             dockerfile: ./model/Dockerfile
         restart: always
@@ -72,14 +73,11 @@ services:
         networks:
             - network
         healthcheck:
-            test: ["CMD-SHELL", "curl", "http://localhost:${MODEL_PORT}/health"]
-            interval: 10s
+            test: curl -sSf http://localhost:${MODEL_PORT}/health
+            interval: 60s
             retries: 5
-            start_period: 1s
-            timeout: 3s
-        depends_on:
-            db:
-                condition: service_healthy
+            start_period: 5s
+            timeout: 1s
 
 networks:
     network:

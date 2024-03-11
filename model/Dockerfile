@@ -1,8 +1,8 @@
-FROM python:3.10.12-slim
-
-RUN apt update -y && apt install -y libgomp1
-
 ARG MODEL_PORT
+
+FROM python:3.10.13-slim
+
+RUN apt update -y && apt install -y libgomp1 curl
 
 WORKDIR /app
 

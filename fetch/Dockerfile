@@ -1,3 +1,5 @@
+ARG BACKEND_PORT
+
 FROM golang:1.21.4 as build
 
 WORKDIR /app
@@ -8,15 +10,18 @@ COPY fetch/go.sum ./
 COPY fetch/cmd/api/main.go ./
 COPY fetch/pkg/ ./pkg
 
-RUN go mod download && CGO_ENABLED=0 go build -o ./go-listing
+RUN go mod download && CGO_ENABLED=0 go build -o ./fetch
 
 # RUN-STAGE
-FROM gcr.io/distroless/static-debian11
+FROM alpine:3.19.1
+
+RUN apk add --update curl \
+    && rm -rf /var/cache/apk/*
 
 COPY .env /
 COPY settings.toml /
-COPY --from=build /app/go-listing /
+COPY --from=build /app/fetch /bin/fetch
 
-EXPOSE 5000
+EXPOSE ${BACKEND_PORT}
 
-CMD [ "/go-listing" ]
+CMD [ "/bin/fetch" ]
