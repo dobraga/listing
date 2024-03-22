@@ -87,7 +87,7 @@ func CreateRequestWithQueryHeaders(url string, query map[string]interface{}) (*h
 		return nil, fmt.Errorf("erro na requisição da página '%s': %v", url, err)
 	}
 
-	//  add headers
+	// add headers
 	headers := map[string]string{
 		"User-Agent": "Mozilla/5.0",
 	}

@@ -22,7 +22,9 @@ func ListLocations(local, type_location, origin string) ([]models.Local, error) 
 	portal := siteInfo["portal"].(string)
 
 	query := map[string]interface{}{
-		"q": local, "portal": portal, "size": "6",
+		"q":             local,
+		"portal":        portal,
+		"size":          "6",
 		"fields":        "neighborhood,city,street",
 		"includeFields": "address.city,address.zone,address.state,address.neighborhood,address.stateAcronym,address.street,address.locationId,address.point",
 	}

@@ -18,11 +18,11 @@ func ListLocation(c *gin.Context) {
 		c.JSON(400, "need a non empty string into 'location' or 'q'")
 		return
 	}
-	locations, status_code, err := property.ListLocations(location, type_location, "vivareal")
+	locations, err := property.ListLocations(location, type_location, "vivareal")
 
 	if err != nil {
 		logrus.Error(err)
-		c.JSON(status_code, err)
+		c.JSON(500, err)
 		return
 	}
 	c.JSON(200, locations)
