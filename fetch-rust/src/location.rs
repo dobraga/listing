@@ -60,21 +60,21 @@ pub struct Location {
 
 #[derive(Debug, Deserialize)]
 pub struct Address {
-    pub city: String,
-    pub zone: String,
-    pub street: String,
+    pub city: &'static str,
+    pub zone: &'static str,
+    pub street: &'static str,
     #[serde(rename = "locationId")]
-    pub location_id: String,
+    pub location_id: &'static str,
     #[serde(rename = "stateAcronym")]
-    pub state_acronym: String,
-    pub state: String,
-    pub neighborhood: String,
+    pub state_acronym: &'static str,
+    pub state: &'static str,
+    pub neighborhood: &'static str,
     pub point: Point,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct Point {
     pub lon: f64,
-    // pub source: String,
+    // pub source: &'static str,
     pub lat: f64,
 }

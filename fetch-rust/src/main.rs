@@ -46,18 +46,24 @@
 pub mod cfg;
 pub mod request;
 pub mod location;
-// pub mod properties;
+pub mod properties;
 
 use crate::cfg::read_config;
 use crate::location::list_locations;
-use crate::properties::fetch_properties;
 
 #[tokio::main]
 async fn main() {
     let cfg = read_config("../settings.toml");
 
     let locations =  list_locations(cfg, "vila valqueire", "vivareal").await.unwrap();
-
     println!("{:?}", locations.locations[0].address);
+
+    let tp_properties = properties::TypeProperties {
+        listing_type: properties::ListingType::USED,
+        business_type: properties::BusinessType::RENT,
+    };
+
+    let props = properties::fetch_properties(locations.locations[0].address, tp_properties);
+
 }
 
