@@ -13,3 +13,6 @@ go_listings
 *.css
 *.woff
 mlruns/
+
+target/
+Cargo.lock

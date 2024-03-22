@@ -44,6 +44,10 @@ services:
                 condition: service_healthy
             model:
                 condition: service_healthy
+        develop:
+            watch:
+                - action: rebuild
+                  path: ./fetch/pkg
 
     front:
         build:
