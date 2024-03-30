@@ -3,11 +3,15 @@
 site = "https://www.vivareal.com.br"
 api = "https://glue-api.vivareal.com"
 portal = "VIVAREAL"
+locations = "/v3/locations"
+listings = "/v2/listings"
 
 [sites.zapimoveis]
 site = "https://www.zapimoveis.com.br"
 api = "https://glue-api.zapimoveis.com.br"
 portal = "ZAP"
+locations = "/v3/locations"
+listings = "/v2/listings"
 
 [metro_trem]
 rj = [
@@ -16,3 +20,19 @@ rj = [
 ]
 
 sp = ["https://pt.wikipedia.org/wiki/Metr%C3%B4_de_S%C3%A3o_Paulo"]
+
+[development]
+BACKEND_HOST = "localhost"
+MODEL_HOST = "localhost"
+POSTGRES_HOST = "localhost"
+DEBUG = true
+force_update = true
+max_pages = 500
+
+[production]
+BACKEND_HOST = "fetch"
+MODEL_HOST = "model"
+POSTGRES_HOST = "db"
+DEBUG = false
+force_update = false
+max_pages = 50

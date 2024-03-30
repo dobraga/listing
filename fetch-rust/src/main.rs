@@ -43,27 +43,47 @@
 //     username: String,
 // }
 
+pub mod args;
 pub mod cfg;
-pub mod request;
+pub mod db;
+pub mod listings;
+pub mod listings_insert;
+pub mod listings_type;
+pub mod listings_update;
 pub mod location;
-pub mod properties;
+pub mod request;
 
+use crate::args::Args;
 use crate::cfg::read_config;
+use crate::db::connect_db;
 use crate::location::list_locations;
+use clap::Parser;
 
 #[tokio::main]
 async fn main() {
+    let args = Args::parse();
+
+    let level = args
+        .verbose
+        .log_level_filter()
+        .to_level()
+        .unwrap_or(log::Level::Info);
+    simple_logger::init_with_level(level).unwrap();
+
     let cfg = read_config("../settings.toml");
 
-    let locations =  list_locations(cfg, "vila valqueire", "vivareal").await.unwrap();
-    println!("{:?}", locations.locations[0].address);
+    let pool = connect_db(&cfg).await;
 
-    let tp_properties = properties::TypeProperties {
-        listing_type: properties::ListingType::USED,
-        business_type: properties::BusinessType::RENT,
+    let locations = list_locations(&cfg, &args.location, "vivareal")
+        .await
+        .unwrap();
+
+    let tp_listings: listings_type::Type = listings_type::Type {
+        listing_type: args.type_listing,
+        business_type: args.type_business,
     };
 
-    let props = properties::fetch_properties(locations.locations[0].address, tp_properties);
-
+    let _vec_listings = listings::fetch_listings(&pool, &cfg, &locations[0], &tp_listings)
+        .await
+        .expect("Could not fetch listings");
 }
-
